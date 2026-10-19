@@ -115,9 +115,10 @@ code { font-family: var(--mono); font-size: 12.5px; }
       <button id="lamp">Świeć na stałe</button>
       <button id="disco">Disco</button>
       <button id="police">Policja</button>
+      <button id="warn">Uwaga</button>
       <button id="drums">Perkusja</button>
     </div>
-    <p class="muted">Moc świecenia działa też w treningu i efektach. „Świeć na stałe” zapala pady wybranym kolorem, „Disco” miga losowymi kolorami, „Policja” daje niebieskie podwójne błyski, „Perkusja” zamienia każdy pad w inny instrument. Działają, aż je wyłączysz.</p>
+    <p class="muted">Moc świecenia działa też w treningu i efektach. „Świeć na stałe” zapala pady wybranym kolorem, „Disco” miga losowymi kolorami, „Policja” daje niebieskie podwójne błyski, „Uwaga” miga pomarańczowo jak lampa ostrzegawcza, „Perkusja” zamienia każdy pad w inny instrument. Działają, aż je wyłączysz.</p>
   </section>
 
   <!-- ZAWODNIK + TRENING -->
@@ -471,6 +472,7 @@ let fxMode = null, fxToken = 0;
 function updateFx() {
   $('#disco').classList.toggle('on', fxMode === 'disco'); $('#disco').textContent = fxMode === 'disco' ? 'Stop disco' : 'Disco';
   $('#police').classList.toggle('on', fxMode === 'police'); $('#police').textContent = fxMode === 'police' ? 'Stop policja' : 'Policja';
+  $('#warn').classList.toggle('on', fxMode === 'warn'); $('#warn').textContent = fxMode === 'warn' ? 'Stop uwaga' : 'Uwaga';
   $('#drums').classList.toggle('on', fxMode === 'drums'); $('#drums').textContent = fxMode === 'drums' ? 'Stop perkusja' : 'Perkusja';
 }
 function stopFx(off = true) { const was = fxMode; fxToken++; fxMode = null; updateFx(); if (was && off) setTimeout(allOff, 60); }
@@ -488,6 +490,16 @@ async function startFx(mode) {
     while (alive()) {
       for (const p of readyPods()) if (!seen.has(p)) { seen.add(p); setColor(p, dimOf(drumOf(p).rgb)); }
       await sleep(400);
+    }
+    return;
+  }
+  if (mode === 'warn') {
+    const AMBER = [255, 110, 0];
+    while (alive()) {
+      const list = readyPods(); if (!list.length) { await sleep(500); continue; }
+      await all(list, AMBER); await sleep(550);
+      if (!alive()) break;
+      await all(list, OFF); await sleep(450);
     }
     return;
   }
@@ -514,6 +526,7 @@ async function startFx(mode) {
 $('#disco').onclick = () => startFx('disco');
 $('#police').onclick = () => startFx('police');
 $('#drums').onclick = () => startFx('drums');
+$('#warn').onclick = () => startFx('warn');
 
 // ——— Perkusja: każdy pad to inny instrument ———
 function noiseBuf(a) { if (a._nb) return a._nb; const b = a.createBuffer(1, a.sampleRate * 0.5, a.sampleRate); const d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; return (a._nb = b); }
@@ -918,7 +931,7 @@ $('#start').onclick = async () => {
   audio();
   if (lampOn) setLamp(false);
   stopFx(false);
-  running = true; $('#start').disabled = true; $('#stop').disabled = false; $('#mode').disabled = true; $('#lamp').disabled = $('#disco').disabled = $('#police').disabled = $('#drums').disabled = true;
+  running = true; $('#start').disabled = true; $('#stop').disabled = false; $('#mode').disabled = true; $('#lamp').disabled = $('#disco').disabled = $('#police').disabled = $('#drums').disabled = $('#warn').disabled = true;
   const m = $('#mode').value;
   const o = {
     rounds: Math.max(1, +$('#rounds').value || 20), dur: Math.max(5, +$('#dur').value || 30),
@@ -944,7 +957,7 @@ $('#start').onclick = async () => {
     if (running && m !== 'duel') await finale();
   } catch (e) { log('err', 'Trening: ' + e.message); }
   if (!running) await allOff();
-  running = false; $('#stop').disabled = true; $('#mode').disabled = false; $('#lamp').disabled = $('#disco').disabled = $('#police').disabled = $('#drums').disabled = false;
+  running = false; $('#stop').disabled = true; $('#mode').disabled = false; $('#lamp').disabled = $('#disco').disabled = $('#police').disabled = $('#drums').disabled = $('#warn').disabled = false;
   renderHistory(); refreshStart(true);
 };
 $('#stop').onclick = () => { running = false; };
