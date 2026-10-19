@@ -252,7 +252,7 @@ const MODE_HELP = {
   timed: 'Bez przerw: trafiasz, od razu zapala się następny pad. Liczy się, ile zdążysz w zadanym czasie.',
   traps: 'Jeden pad świeci na zielono, pozostałe w innych kolorach to pułapki. Bij tylko zielony! Trafienie zielonego +1, dotknięcie pułapki −1 (wynik może być ujemny). Z jednym padem pułapki pojawiają się na zmianę z zielonym.',
   duel: 'Pady dzielą się na dwie drużyny: nieparzyste niebieskie, parzyste pomarańczowe. Każdy bije tylko swoje. Wygrywa więcej trafień. Potrzeba co najmniej 2 padów.',
-  shuttle: 'Pad startowy odlicza 3-2-1 na czerwono, pozostałe świecą na niebiesko. Na START biegnij i dotknij dowolnego niebieskiego pachołka, wtedy pad startowy zapala się na zielono. Wróć i dotknij zielonego, to zatrzymuje czas. Zapisuje czas do pachołka i czas całkowity. Potrzeba co najmniej 2 padów.',
+  shuttle: 'Pad startowy odlicza 3-2-1 na czerwono, pozostałe świecą na niebiesko. Na START pad startowy zapala się na zielono i rusza stoper. Biegnij do niebieskich pachołków (nie trzeba ich dotykać), wróć i dotknij zielonego, to zatrzymuje czas. Dotknięcia w pierwszej sekundzie po starcie są ignorowane.',
   stopwatch: 'Pad startowy odlicza 3-2-1 na czerwono, pozostałe pady świecą na niebiesko jak pachołki. Na zielonym rusza stoper. Dotknięcie dowolnego pachołka zatrzymuje czas (z jednym padem: dotknięcie tego pada).'
 };
 
@@ -715,7 +715,7 @@ $('#mode').value = S.get('bp_mode', 'reaction'); $('#mode').onchange = applyMode
 let running = false;
 function refreshStart(keepText) {
   const n = readyPods().length, m = $('#mode').value;
-  const need = m === 'duel' || m === 'shuttle' ? 2 : 1;
+  const need = m === 'duel' ? 2 : 1;
   $('#start').disabled = running || n < need;
   $('#dcAll').disabled = ![...pods.values()].some(p => p.device.gatt.connected);
   if (!running && !keepText) $('#progress').textContent = n >= need ? `Gotowe: ${n} ${n === 1 ? 'pad' : 'pady'}. Kliknij Start.` : (m === 'duel' ? 'Pojedynek wymaga co najmniej 2 padów.' : 'Dodaj co najmniej jeden pad.');
@@ -835,12 +835,12 @@ const MODES = {
     } else if (running) { st.miss = 1; SND.miss(); $('#last').textContent = 'koniec czasu'; }
   },
   async shuttle(st, o) {
-    const list = readyPods(); if (list.length < 2 || !running) return;
+    const list = readyPods(); if (!list.length || !running) return;
     const startPod = list.find(p => p.num === o.startPad) || list[0];
     const cones = list.filter(p => p !== startPod);
     await allOff();
     await Promise.all(cones.map(p => setColor(p, BLUE)));
-    $('#progress').textContent = `Pad startowy: ${startPod.num}. Pachołki: ${cones.map(p => p.num).join(', ')}.`;
+    $('#progress').textContent = cones.length ? `Pad startowy: ${startPod.num}. Pachołki: ${cones.map(p => p.num).join(', ')}.` : `Pad startowy: ${startPod.num}.`;
     for (const n of [3, 2, 1]) {
       if (!running) return;
       $('#last').textContent = n; SND.tick();
@@ -859,15 +859,17 @@ const MODES = {
       const stopper = setInterval(() => { if (!running) fin(null); }, 50);
       light();
     });
-    $('#progress').textContent = 'Biegnij do dowolnego niebieskiego pachołka!';
-    const r1 = await waitTap(cones, () => cones.forEach(p => setColor(p, BLUE, true)));
-    let r2 = null;
-    if (r1) {
-      st.split = Math.round(r1.t - t0); SND.hit();
-      $('#progress').textContent = `Pachołek ${r1.pod.num}: ${(st.split / 1000).toFixed(2)} s. Wracaj do zielonego!`;
-      cones.forEach(p => setColor(p, OFF));
-      r2 = await waitTap([startPod], () => setColor(startPod, GREEN, true));
-    }
+    // Zielony od razu: biegniesz do pachołków (bez dotykania) i wracasz. Dotknięcia w pierwszej sekundzie są ignorowane.
+    $('#progress').textContent = 'Biegnij do niebieskich pachołków i wróć do zielonego!';
+    const r2 = await new Promise(resolve => {
+      let done = false;
+      const fin = r => { if (done) return; done = true; startPod.waiter = null; clearTimeout(to); clearInterval(stopper); resolve(r); };
+      const arm = () => { startPod.waiter = ms => { if (ms == null) return fin(null); if (performance.now() - t0 < 1000) { arm(); return; } fin({ t: performance.now() }); }; };
+      arm();
+      const to = setTimeout(() => fin(null), o.maxT * 1000);
+      const stopper = setInterval(() => { if (!running) fin(null); }, 50);
+      setColor(startPod, GREEN);
+    });
     clearInterval(tick);
     await allOff();
     if (r2) {
@@ -875,7 +877,7 @@ const MODES = {
       st.hits = 1; st.times.push(total); SND.hit();
       $('#last').textContent = (total / 1000).toFixed(3) + ' s';
       $('#best').textContent = (total / 1000).toFixed(3) + ' s'; $('#hits').textContent = 1;
-      log('info', `Biegnij z powrotem: całość ${total} ms, do pachołka ${st.split} ms`);
+      log('info', `Biegnij z powrotem: ${total} ms`);
     } else if (running) { st.miss = 1; SND.miss(); $('#last').textContent = 'koniec czasu'; }
   },
   async reaction(st, o) {
