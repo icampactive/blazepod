@@ -1,0 +1,883 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>BlazePod Trener</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Nunito:wght@400;600;800&family=Fredoka:wght@500;700&display=swap">
+<style>
+/* Układ: pulpit trenera w barwach iCampActive — zielona wstęga w nagłówku, białe karty, żółte akcenty */
+:root {
+  --bg: #f5f8ee; --panel: #ffffff; --fg: #1c1c1c; --muted: #5f6a55; --line: #dfe6d3;
+  --accent: #5aa91a; --accent-dk: #3f7d0e; --accent-fg: #ffffff; --sun: #f9d200; --sun-fg: #1c1c1c;
+  --rx: #1f6fb5; --tx: #b4630b; --err: #d23a2b; --warn: #f9d200;
+  --pa: #2563d9; --pb: #f08a24; --podoff: #e3e9da;
+  --sans: "Nunito", system-ui, sans-serif; --mono: "IBM Plex Mono", ui-monospace, monospace;
+  --display: "Fredoka", "Nunito", system-ui, sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.5 var(--sans);
+  padding: 16px max(16px, env(safe-area-inset-right)) 40px max(16px, env(safe-area-inset-left)); }
+.wrap { max-width: 980px; margin: 0 auto; display: grid; gap: 16px; }
+h1 { font: 700 32px/1 var(--display); letter-spacing: .02em; margin: 0; text-transform: uppercase; color: #fff; }
+h1 span { color: var(--sun); }
+.brand { background: var(--accent); color: #fff; border-radius: 14px; padding: 14px 16px; border: 3px solid var(--fg); box-shadow: 0 4px 0 var(--fg); }
+.brand .muted { color: #eaf6dc; }
+.brand label { color: #fff; }
+.brand .pill { background: #fff; }
+.tag { font: 700 13px/1 var(--display); background: #fff; color: var(--accent-dk); border: 2px solid var(--fg); border-radius: 99px; padding: 4px 10px; letter-spacing: .04em; }
+h2 { font: 700 15px/1.2 var(--display); text-transform: uppercase; letter-spacing: .06em; color: var(--accent-dk); margin: 0; }
+p { margin: 0; }
+.muted { color: var(--muted); font-size: 13px; }
+.panel { background: var(--panel); border: 2px solid var(--line); border-radius: 14px; padding: 14px; display: grid; gap: 12px; min-width: 0; align-content: start; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.between { justify-content: space-between; }
+button { font: 700 14px var(--sans); border-radius: 99px; padding: 8px 16px; cursor: pointer; border: 2px solid var(--line); background: var(--panel); color: var(--fg); }
+button:hover:not(:disabled) { border-color: var(--accent); }
+button.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent-dk); box-shadow: 0 3px 0 var(--accent-dk); }
+button.primary:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--accent-dk); }
+.brand button.primary, button.sun { background: var(--sun); color: var(--sun-fg); border-color: var(--fg); box-shadow: 0 3px 0 var(--fg); }
+button.danger { color: var(--err); border-color: var(--err); }
+button.on { background: var(--sun); color: var(--sun-fg); border-color: var(--fg); }
+button.small { padding: 4px 10px; font-size: 12px; }
+button:disabled { opacity: .45; cursor: not-allowed; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+input, select { font: 14px var(--sans); background: var(--bg); color: var(--fg); border: 1px solid var(--line); border-radius: 6px; padding: 7px 9px; min-width: 0; }
+input[type=number] { width: 76px; font-family: var(--mono); }
+input[type=range] { padding: 0; accent-color: var(--accent); width: 160px; }
+label { font-size: 13px; color: var(--muted); }
+.field { display: grid; gap: 4px; }
+.status { font-size: 13px; color: var(--muted); }
+.status.err { color: var(--err); }
+.pods { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
+.pod { border: 2px solid var(--line); border-radius: 12px; padding: 12px; display: grid; gap: 10px; background: var(--bg); min-width: 0; }
+.num { font: 700 26px/1 var(--display); width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--podoff); color: var(--fg); border: 2px solid var(--fg); flex: none; transition: background .15s; }
+.pill { font: 600 11px var(--mono); padding: 2px 8px; border-radius: 99px; border: 1px solid var(--line); color: var(--muted); }
+.pill.ok { color: var(--accent-dk); border-color: var(--accent); background: #eef7e3; }
+.pill.bad { color: var(--err); border-color: var(--err); }
+.sw { width: 28px; height: 28px; border-radius: 6px; padding: 0; border: 2px solid var(--line); }
+.sw.sel { border-color: var(--fg); box-shadow: 0 0 0 2px var(--bg) inset; }
+.big { font: 700 72px/1 var(--display); font-variant-numeric: tabular-nums; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; }
+.stat { display: grid; gap: 2px; }
+.stat b { font: 700 28px/1 var(--display); font-variant-numeric: tabular-nums; }
+.duel { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.duel > div { border-radius: 8px; padding: 12px; background: var(--bg); display: grid; gap: 4px; }
+.duel .big { font-size: 56px; }
+.grid2 { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+.tbl { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { color: var(--muted); font-weight: 600; font-size: 12px; }
+td.n { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+#log { font: 12px/1.6 var(--mono); max-height: 260px; overflow: auto; background: var(--bg); border-radius: 6px; padding: 8px; white-space: pre-wrap; word-break: break-all; }
+.l-rx { color: var(--rx); } .l-tx { color: var(--tx); } .l-err { color: var(--err); } .l-info { color: var(--muted); }
+details > summary { cursor: pointer; color: var(--muted); font-size: 13px; }
+code { font-family: var(--mono); font-size: 12.5px; }
+.hide { display: none !important; }
+@media (prefers-reduced-motion: reduce) { .num { transition: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="row between brand">
+    <div style="display:grid;gap:6px">
+      <span class="tag" style="justify-self:start">iCAMP.pl ACTIVE</span>
+      <h1>BlazePod <span>Trener</span></h1>
+      <p class="muted">Trening reakcji na padach BlazePod</p>
+    </div>
+    <div class="row">
+      <label class="row" for="sound" style="gap:6px"><input type="checkbox" id="sound" checked> Dźwięki</label>
+      <span id="support" class="pill">sprawdzam…</span>
+    </div>
+  </header>
+
+  <!-- PADY -->
+  <section class="panel">
+    <div class="row between">
+      <h2>Pady</h2>
+      <div class="row"><button id="add" class="primary">Dodaj pad</button><button id="dcAll" disabled>Rozłącz wszystkie</button></div>
+    </div>
+    <p id="status" class="status">Włącz pad, zamknij oficjalną aplikację i kliknij „Dodaj pad”. Każdy pad dodajesz osobno.</p>
+    <div id="flagBox" class="row hide" style="background:var(--bg);border:1px solid var(--err);border-radius:8px;padding:10px">
+      <span style="flex:1 1 240px">Aby pady przeszły autoryzację, włącz w Chrome ustawienie <b>Experimental Web Platform features</b>. Kliknij przycisk, wklej adres w nowej karcie, ustaw <b>Enabled</b> i kliknij <b>Uruchom ponownie</b>.</span>
+      <button id="copyFlag" class="primary">Skopiuj adres ustawienia</button>
+    </div>
+    <div id="pods" class="pods"></div>
+    <div class="row" style="gap:16px;border-top:1px solid var(--line);padding-top:12px">
+      <div class="field"><label>Kolor</label><div class="row" id="lampColors"></div></div>
+      <div class="field"><label for="bright">Moc świecenia: <b id="brightVal">100%</b></label><input type="range" id="bright" min="5" max="100" step="5" value="100"></div>
+      <button id="lamp">Świeć na stałe</button>
+      <button id="disco">Disco</button>
+      <button id="police">Policja</button>
+    </div>
+    <p class="muted">Moc świecenia działa też w treningu i efektach. „Świeć na stałe” zapala pady wybranym kolorem, „Disco” miga losowymi kolorami, „Policja” daje niebieskie podwójne błyski. Działają, aż je wyłączysz.</p>
+  </section>
+
+  <!-- ZAWODNIK + TRENING -->
+  <div class="grid2">
+    <section class="panel">
+      <div class="row between"><h2>Konto i zawodnik</h2><span id="cloud" class="pill">gość</span></div>
+      <div class="row between" style="background:var(--bg);border-radius:8px;padding:10px">
+        <div class="row" style="min-width:0">
+          <img id="acctPic" alt="" class="hide" style="width:32px;height:32px;border-radius:50%" referrerpolicy="no-referrer">
+          <div style="min-width:0"><b id="acctName">Nie zalogowano</b><div class="muted" id="acctMail">Grasz jako gość, wyniki się nie zapisują.</div></div>
+        </div>
+        <button id="login" class="primary">Zaloguj przez Google</button>
+        <button id="logout" class="small hide">Wyloguj</button>
+      </div>
+      <div class="field">
+        <label for="player">Kto ćwiczy</label>
+        <select id="player"></select>
+      </div>
+      <div class="row">
+        <input id="newName" placeholder="Imię nowego zawodnika" style="flex:1 1 140px" maxlength="30">
+        <button id="addPlayer">Dodaj</button>
+      </div>
+      <div class="row">
+        <button id="delPlayer" class="small danger">Usuń zawodnika</button>
+        <button id="export" class="small">Kopia wyników</button>
+        <label class="small" for="import" style="cursor:pointer;border:2px solid var(--line);border-radius:99px;padding:4px 10px;font-weight:700;color:var(--fg)">Wczytaj kopię</label>
+        <input type="file" id="import" accept=".json" class="hide">
+      </div>
+      <p class="muted">Po zalogowaniu Twoi zawodnicy i ich wyniki zapisują się na Twoim koncie Google: te same na komputerze i telefonie. Inne konto ma swoich zawodników. Bez internetu wyniki zapiszą się, gdy sieć wróci.</p>
+    </section>
+
+    <section class="panel">
+      <h2>Tryb</h2>
+      <div class="field">
+        <label for="mode">Ćwiczenie</label>
+        <select id="mode">
+          <option value="reaction">Reakcja: losowy pad, losowy kolor</option>
+          <option value="sequence">Sekwencja: pady po kolei 1→2→3…</option>
+          <option value="timed">Na czas: ile trafień w X sekund</option>
+          <option value="traps">Pułapki: bij zielony, omijaj czerwony</option>
+          <option value="duel">Pojedynek: dwóch graczy</option>
+          <option value="stopwatch">Start 3-2-1: pomiar czasu</option>
+        </select>
+      </div>
+      <p id="modeHelp" class="muted"></p>
+      <div class="row" style="gap:12px">
+        <div class="field" data-for="reaction sequence traps"><label for="rounds">Powtórzeń</label><input id="rounds" type="number" min="1" max="200" value="20"></div>
+        <div class="field" data-for="timed duel"><label for="dur">Czas (s)</label><input id="dur" type="number" min="5" max="600" value="30"></div>
+        <div class="field" data-for="reaction sequence timed traps duel"><label for="tmo">Limit na pad (s)</label><input id="tmo" type="number" min="0.5" max="30" step="0.5" value="3"></div>
+        <div class="field" data-for="reaction traps"><label for="pmin">Przerwa od (s)</label><input id="pmin" type="number" min="0" max="10" step="0.1" value="0.6"></div>
+        <div class="field" data-for="reaction traps"><label for="pmax">do (s)</label><input id="pmax" type="number" min="0" max="10" step="0.1" value="2"></div>
+        <div class="field" data-for="stopwatch"><label for="maxT">Maks. czas (s)</label><input id="maxT" type="number" min="5" max="600" value="60"></div>
+      </div>
+      <div class="row hide" id="duelPlayers" style="gap:12px">
+        <div class="field"><label for="pA" style="color:var(--pa)">Gracz niebieski (pady 1, 3, 5…)</label><select id="pA"></select></div>
+        <div class="field"><label for="pB" style="color:var(--pb)">Gracz pomarańczowy (pady 2, 4, 6…)</label><select id="pB"></select></div>
+      </div>
+    </section>
+  </div>
+
+  <section class="panel">
+    <div class="row between">
+      <h2>Trening</h2>
+      <div class="row">
+        <button id="start" class="primary" disabled>Start</button>
+        <button id="stop" disabled>Stop</button>
+      </div>
+    </div>
+    <div id="soloView" style="display:grid;gap:12px">
+      <div class="row" style="gap:20px;align-items:flex-end">
+        <div class="big" id="last">— ms</div>
+        <div class="muted" id="progress">Dodaj co najmniej jeden pad.</div>
+      </div>
+      <div class="stats">
+        <div class="stat"><span class="muted">Średnia</span><b id="avg">—</b></div>
+        <div class="stat"><span class="muted">Najlepszy</span><b id="best">—</b></div>
+        <div class="stat"><span class="muted">Trafienia</span><b id="hits">0</b></div>
+        <div class="stat"><span class="muted">Pudła</span><b id="miss">0</b></div>
+        <div class="stat" data-for="traps"><span class="muted">Błędy (czerwony)</span><b id="errs">0</b></div>
+      </div>
+    </div>
+    <div id="duelView" class="hide" style="display:grid;gap:12px">
+      <div class="muted" id="duelProgress"></div>
+      <div class="duel">
+        <div style="border:2px solid var(--pa)"><span id="dAname" style="color:var(--pa);font-weight:600">Niebieski</span><span class="big" id="dA">0</span><span class="muted" id="dAavg">średnia —</span></div>
+        <div style="border:2px solid var(--pb)"><span id="dBname" style="color:var(--pb);font-weight:600">Pomarańczowy</span><span class="big" id="dB">0</span><span class="muted" id="dBavg">średnia —</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="row between"><h2>Historia</h2><span class="muted" id="histWho"></span></div>
+    <div class="stats" id="records"></div>
+    <div class="tbl"><table><thead><tr><th>Data</th><th>Tryb</th><th>Trafienia</th><th>Pudła</th><th>Błędy</th><th>Średnia</th><th>Najlepszy</th></tr></thead><tbody id="hist"></tbody></table></div>
+  </section>
+
+  <details class="panel">
+    <summary>Dziennik techniczny</summary>
+    <div class="row" style="justify-content:flex-end"><button id="copy" class="small">Kopiuj dziennik</button><button id="clear" class="small">Wyczyść</button></div>
+    <div id="log" aria-live="polite"></div>
+  </details>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+// Protokół: github.com/sasodoma/blazepod-hacking (+ github.com/Snerls/blazepod)
+const UART_SVC = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
+const UART_RX  = '6e400002-b5a3-f393-e0a9-e50e24dcca9e';
+const UART_TX  = '6e400003-b5a3-f393-e0a9-e50e24dcca9e';
+const COLOR_SVC = '50c97bfa-4cb8-4c84-b745-0e58a0280cd6';
+const COLOR_CHR = '50c912a2-4cb8-4c84-b745-0e58a0280cd6';
+const TAP_SVC   = '50c928bd-4cb8-4c84-b745-0e58a0280cd6';
+const TAP_CHR   = '50c9727e-4cb8-4c84-b745-0e58a0280cd6';
+const BATT_SVC = 0x180F;
+const COYOTTA = 0x09D7;
+
+const COLORS = { zielony:[0,255,0], czerwony:[255,0,0], niebieski:[0,0,255], żółty:[255,200,0], fioletowy:[180,0,255], turkusowy:[0,220,200], pomarańczowy:[255,90,0], biały:[255,255,255] };
+const OFF = [0,0,0], GREEN = COLORS.zielony, RED = COLORS.czerwony, BLUE = COLORS.niebieski, ORANGE = COLORS.pomarańczowy;
+const RANDOM_COLORS = ['zielony','niebieski','żółty','fioletowy','turkusowy','biały'].map(k => COLORS[k]);
+const MODE_NAMES = { reaction:'Reakcja', sequence:'Sekwencja', timed:'Na czas', traps:'Pułapki', duel:'Pojedynek', stopwatch:'Start 3-2-1' };
+const MODE_HELP = {
+  reaction: 'Losowy pad zapala się losowym kolorem po losowej przerwie. Uderz jak najszybciej. Czas mierzy sam pad.',
+  sequence: 'Pady zapalają się po kolei według numerów. Przydaje się do ćwiczeń biegowych i zmiany kierunku.',
+  timed: 'Bez przerw: trafiasz, od razu zapala się następny pad. Liczy się, ile zdążysz w zadanym czasie.',
+  traps: 'Zielony bij, czerwonego nie dotykaj. Czerwony zgaśnie sam. Wynik = trafienia − błędy.',
+  duel: 'Pady dzielą się na dwie drużyny: nieparzyste niebieskie, parzyste pomarańczowe. Każdy bije tylko swoje. Wygrywa więcej trafień. Potrzeba co najmniej 2 padów.',
+  stopwatch: 'Pady odliczają 3-2-1 na czerwono, potem wszystkie zapalają się na zielono i rusza stoper. Dotknięcie dowolnego pada zatrzymuje czas. Np. sprint do pada albo tor przeszkód.'
+};
+
+const $ = s => document.querySelector(s);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const hexStr = arr => [...arr].map(b => b.toString(16).padStart(2,'0')).join(' ');
+const ts = () => { const d = new Date(); return d.toTimeString().slice(0,8)+'.'+String(d.getMilliseconds()).padStart(3,'0'); };
+const S = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch(e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e) {} }
+};
+const logEl = $('#log'); const lines = [];
+function log(kind, text) {
+  const line = `${ts()} ${text}`; lines.push(line); if (lines.length > 2000) lines.shift();
+  const div = document.createElement('div'); div.className = 'l-' + kind; div.textContent = line;
+  logEl.appendChild(div); if (logEl.childNodes.length > 2000) logEl.firstChild.remove();
+  logEl.scrollTop = logEl.scrollHeight;
+}
+function status(t, err) { const s = $('#status'); s.textContent = t; s.className = 'status' + (err ? ' err' : ''); }
+
+// ——— Dźwięki ———
+let actx = null;
+function audio() { if (!actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {} } if (actx?.state === 'suspended') actx.resume(); return actx; }
+function beep(freq, dur = 0.1, type = 'sine', vol = 0.25, delay = 0) {
+  if (!$('#sound').checked) return; const a = audio(); if (!a) return;
+  const o = a.createOscillator(), g = a.createGain(), t = a.currentTime + delay;
+  o.type = type; o.frequency.value = freq; g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+  o.connect(g).connect(a.destination); o.start(t); o.stop(t + dur + 0.02);
+}
+const SND = {
+  hit: () => beep(880, 0.08), miss: () => beep(220, 0.22, 'triangle'), error: () => beep(140, 0.35, 'square', 0.18),
+  tick: () => beep(600, 0.15), go: () => beep(1000, 0.35),
+  end: () => { beep(660, 0.15, 'sine', .25, 0); beep(880, 0.15, 'sine', .25, .17); beep(1320, 0.3, 'sine', .25, .34); }
+};
+
+// ——— Autoryzacja ———
+function authPayload(m5) {
+  const off = m5[0]; const poly = (0xEDB88321 + (off % 50)) >>> 0; let c = 0xFFFFFFFF;
+  for (const b of m5.slice(1)) { c = (c ^ b) >>> 0; for (let j = 0; j < 8; j++) c = (c & 1) ? ((c >>> 1) ^ poly) >>> 0 : c >>> 1; }
+  c = (c ^ 0xFFFFFFFF) >>> 0; c = (c + (c << 3)) >>> 0; c = (c ^ (c >>> 11)) >>> 0; c = (c + (c << 15)) >>> 0;
+  return new Uint8Array([0x73, 0x65, 0x61, c & 255, (c >>> 8) & 255, (c >>> 16) & 255, c >>> 24]);
+}
+
+// ——— Pady ———
+const pods = new Map(); let podCounter = 0;
+const readyPods = () => [...pods.values()].filter(p => p.authed).sort((a, b) => a.num - b.num);
+let brightness = S.get('bp_bright', 100) / 100;
+
+if (!navigator.bluetooth) {
+  $('#support').textContent = 'brak Bluetooth'; $('#support').className = 'pill bad'; $('#add').disabled = true;
+  status('Ta przeglądarka nie obsługuje Web Bluetooth. Otwórz plik w Chrome (Ctrl+O), nie w podglądzie.', true);
+} else if (!('watchAdvertisements' in BluetoothDevice.prototype)) {
+  $('#support').textContent = 'włącz flagę'; $('#support').className = 'pill bad';
+  $('#flagBox').classList.remove('hide');
+  status('Włącz w Chrome: chrome://flags/#enable-experimental-web-platform-features → Enabled, potem uruchom Chrome ponownie. Bez tego pady nie przejdą autoryzacji.', true);
+} else { $('#support').textContent = 'Bluetooth OK'; $('#support').className = 'pill ok'; }
+
+$('#copyFlag').onclick = async () => {
+  const url = 'chrome://flags/#enable-experimental-web-platform-features';
+  try { await navigator.clipboard.writeText(url); $('#copyFlag').textContent = 'Skopiowano. Wklej w nowej karcie (Ctrl+T, Ctrl+V, Enter)'; }
+  catch (e) { prompt('Skopiuj ten adres i wklej w nowej karcie:', url); }
+};
+$('#add').onclick = async () => {
+  audio();
+  try {
+    status('Wybierz pad z okna Chrome…');
+    const device = await navigator.bluetooth.requestDevice({
+      filters: [{ namePrefix: 'Blaze' }],
+      optionalServices: [UART_SVC, COLOR_SVC, TAP_SVC, BATT_SVC],
+      optionalManufacturerData: [COYOTTA]
+    });
+    if (pods.has(device.id)) { const p = pods.get(device.id); if (!p.authed) await connectPod(p); else status(`${p.name} jest już połączony.`); return; }
+    const pod = { device, num: ++podCounter, authed: false, queue: Promise.resolve(), waiter: null, retries: 0, manual: false };
+    pod.name = `Pad ${pod.num}`;
+    pods.set(device.id, pod); renderPod(pod);
+    device.addEventListener('gattserverdisconnected', () => {
+      const was = pod.authed; pod.authed = false; pod.colorChr = null;
+      if (pod.waiter) pod.waiter(null);
+      setState(pod, 'rozłączony', 'bad'); log('info', `[${pod.name}] rozłączono`); refreshStart();
+      if (was && !pod.manual && pod.retries < 3) { pod.retries++; setTimeout(() => connectPod(pod), 1500); }
+    });
+    await connectPod(pod);
+  } catch (e) {
+    if (e.name === 'NotFoundError') status('Nie wybrano pada.', true);
+    else { status(e.message, true); log('err', e.message); }
+  }
+};
+
+async function grabMfr(pod) {
+  if (!pod.device.watchAdvertisements) return null;
+  setState(pod, 'szukam sygnału…');
+  const ac = new AbortController();
+  const got = new Promise(res => {
+    const h = ev => {
+      const dv = ev.manufacturerData.get(COYOTTA) || [...ev.manufacturerData.values()][0];
+      if (!dv) return;
+      const bytes = [...new Uint8Array(dv.buffer, dv.byteOffset, dv.byteLength)];
+      if (bytes.length >= 5) { pod.device.removeEventListener('advertisementreceived', h); log('rx', `[${pod.name}] dane reklamy: ${hexStr(bytes)}`); res(bytes); }
+    };
+    pod.device.addEventListener('advertisementreceived', h);
+    setTimeout(() => { pod.device.removeEventListener('advertisementreceived', h); res(null); }, 10000);
+  });
+  try { await pod.device.watchAdvertisements({ signal: ac.signal }); } catch (e) { log('err', `[${pod.name}] odczyt reklam: ${e.message}`); ac.abort(); return null; }
+  const bytes = await got; ac.abort(); return bytes;
+}
+
+async function connectPod(pod) {
+  pod.manual = false;
+  try {
+    let mfr = null;
+    if (!pod.device.gatt.connected) mfr = await grabMfr(pod);
+    if (!mfr) { setState(pod, 'brak sygnału', 'bad'); status(`${pod.name}: nie złapałem sygnału padu. Sprawdź, czy świeci, i kliknij „Połącz”.`, true); return; }
+    setState(pod, 'łączę…');
+    const server = await pod.device.gatt.connect();
+    const uart = await server.getPrimaryService(UART_SVC);
+    const rx = await uart.getCharacteristic(UART_RX);
+    try {
+      const tx = await uart.getCharacteristic(UART_TX);
+      tx.addEventListener('characteristicvaluechanged', ev => { const v = ev.target.value; log('rx', `[${pod.name}] UART ← ${hexStr(new Uint8Array(v.buffer, v.byteOffset, v.byteLength))}`); });
+      await tx.startNotifications();
+    } catch (e) {}
+    const key = authPayload(mfr.slice(-5));
+    await rx.writeValueWithoutResponse(key);
+    log('tx', `[${pod.name}] autoryzacja → ${hexStr(key)}`);
+    await sleep(300);
+    pod.colorChr = await (await server.getPrimaryService(COLOR_SVC)).getCharacteristic(COLOR_CHR);
+    const tapChr = await (await server.getPrimaryService(TAP_SVC)).getCharacteristic(TAP_CHR);
+    if (pod.tapBound !== tapChr) tapChr.addEventListener('characteristicvaluechanged', ev => onTap(pod, ev.target.value));
+    pod.tapBound = tapChr;
+    await tapChr.startNotifications();
+    try {
+      const batt = await (await server.getPrimaryService(BATT_SVC)).getCharacteristic(0x2A19);
+      const v = await batt.readValue(); pod.card.querySelector('.batt').textContent = `bateria ${v.getUint8(0)}%`;
+    } catch (e) {}
+    pod.authed = true; pod.retries = 0; setState(pod, 'gotowy', 'ok'); log('info', `[${pod.name}] gotowy`);
+    status(`${pod.name} gotowy. Połączone pady: ${readyPods().length}.`);
+    if (lampOn) await setColor(pod, lampColor);
+    else { await setColor(pod, GREEN); await sleep(350); await setColor(pod, OFF); }
+  } catch (e) {
+    setState(pod, 'błąd', 'bad'); log('err', `[${pod.name}] ${e.message}`); status(`${pod.name}: ${e.message}`, true);
+  }
+  refreshStart();
+}
+
+function setColor(pod, rgb, offOnTap = false) {
+  if (!pod.colorChr) return Promise.resolve();
+  const s = rgb.map(v => Math.round(v * brightness));
+  const data = new Uint8Array(offOnTap ? [s[1], s[2], s[0], 1] : [s[1], s[2], s[0]]);
+  const lit = rgb.some(Boolean);
+  pod.card.querySelector('.num').style.background = lit ? `rgb(${rgb.join(',')})` : '';
+  pod.card.querySelector('.num').style.color = lit && !(rgb[0] + rgb[1] > 300) ? '#fff' : '';
+  pod.queue = pod.queue.then(() => pod.colorChr?.writeValue(data)).catch(e => log('err', `[${pod.name}] kolor: ${e.message}`));
+  return pod.queue;
+}
+const allOff = () => Promise.all(readyPods().map(p => setColor(p, OFF)));
+
+function onTap(pod, v) {
+  const b = new Uint8Array(v.buffer, v.byteOffset, v.byteLength);
+  const state = b[0]; const ms = b.length >= 5 ? v.getUint32(1, true) : 0;
+  log('rx', `[${pod.name}] uderzenie 0x${state.toString(16).padStart(2,'0')}${state ? `, ${ms} ms` : ' (pad zgaszony)'}`);
+  if (state === 0x25) { const n = pod.card.querySelector('.num'); n.style.background = ''; n.style.color = ''; }
+  if (state !== 0x00 && pod.waiter) pod.waiter(ms);
+}
+
+function setState(pod, text, kind) { const el = pod.card?.querySelector('.state'); if (el) { el.textContent = text; el.className = 'pill state' + (kind ? ' ' + kind : ''); } }
+
+function renderPod(pod) {
+  const card = document.createElement('div'); card.className = 'pod'; pod.card = card;
+  card.innerHTML = `
+    <div class="row between"><div class="row"><span class="num"></span><b class="n"></b></div><span class="pill state">nowy</span></div>
+    <div class="row sws"></div>
+    <div class="row between"><span class="muted batt"></span><div class="row"><button class="small blink">Mignij</button><button class="small re">Połącz</button><button class="small dc">Rozłącz</button></div></div>`;
+  card.querySelector('.num').textContent = pod.num;
+  card.querySelector('.n').textContent = pod.name;
+  card.querySelector('.re').onclick = async () => { if (pod.device.gatt.connected) { pod.manual = true; pod.device.gatt.disconnect(); await sleep(400); } connectPod(pod); };
+  card.querySelector('.dc').onclick = () => { pod.manual = true; pod.device.gatt.disconnect(); };
+  card.querySelector('.blink').onclick = async () => { for (let i = 0; i < 3; i++) { await setColor(pod, COLORS.biały); await sleep(250); await setColor(pod, OFF); await sleep(200); } if (lampOn) setColor(pod, lampColor); };
+  const sws = card.querySelector('.sws');
+  for (const [name, rgb] of Object.entries({ zielony: GREEN, czerwony: RED, niebieski: BLUE, żółty: COLORS.żółty, biały: COLORS.biały, zgaś: OFF })) {
+    const b = document.createElement('button'); b.className = 'sw'; b.title = name; b.setAttribute('aria-label', `${pod.name}: ${name}`);
+    b.style.background = rgb.some(Boolean) ? `rgb(${rgb.join(',')})` : 'transparent';
+    if (!rgb.some(Boolean)) { b.textContent = '×'; b.style.color = 'var(--fg)'; }
+    b.onclick = () => setColor(pod, rgb);
+    sws.appendChild(b);
+  }
+  $('#pods').appendChild(card);
+}
+
+// ——— Oświetlenie: kolor, moc, świeć na stałe ———
+let lampColor = COLORS[S.get('bp_lampColor', 'zielony')] || GREEN, lampOn = false, lampTimer = null;
+(function renderLampColors() {
+  const box = $('#lampColors');
+  for (const [name, rgb] of Object.entries(COLORS)) {
+    const b = document.createElement('button'); b.className = 'sw' + (rgb === lampColor ? ' sel' : ''); b.title = name; b.setAttribute('aria-label', 'Kolor ' + name);
+    b.style.background = `rgb(${rgb.join(',')})`;
+    b.onclick = () => { lampColor = rgb; S.set('bp_lampColor', name); box.querySelectorAll('.sw').forEach(x => x.classList.remove('sel')); b.classList.add('sel'); if (lampOn) applyLamp(); };
+    box.appendChild(b);
+  }
+})();
+$('#bright').value = Math.round(brightness * 100); $('#brightVal').textContent = Math.round(brightness * 100) + '%';
+let brightDeb = null;
+$('#bright').oninput = () => {
+  brightness = $('#bright').value / 100; $('#brightVal').textContent = $('#bright').value + '%'; S.set('bp_bright', +$('#bright').value);
+  clearTimeout(brightDeb); brightDeb = setTimeout(() => { if (lampOn) applyLamp(); }, 150);
+};
+const applyLamp = () => Promise.all(readyPods().map(p => setColor(p, lampColor)));
+function setLamp(on) {
+  lampOn = on; $('#lamp').classList.toggle('on', on); $('#lamp').textContent = on ? 'Wyłącz światło' : 'Świeć na stałe';
+  clearInterval(lampTimer);
+  if (on) { applyLamp(); lampTimer = setInterval(applyLamp, 20000); log('info', 'Świeć na stałe: włączone'); }
+  else { allOff(); log('info', 'Świeć na stałe: wyłączone'); }
+}
+$('#lamp').onclick = () => { if (running) return; stopFx(false); setLamp(!lampOn); };
+
+// ——— Efekty świetlne: Disco i Policja ———
+const DISCO = [[255,0,0],[0,255,0],[0,0,255],[255,200,0],[180,0,255],[0,220,200],[255,90,0],[255,0,120],[255,255,255]];
+let fxMode = null, fxToken = 0;
+function updateFx() {
+  $('#disco').classList.toggle('on', fxMode === 'disco'); $('#disco').textContent = fxMode === 'disco' ? 'Stop disco' : 'Disco';
+  $('#police').classList.toggle('on', fxMode === 'police'); $('#police').textContent = fxMode === 'police' ? 'Stop policja' : 'Policja';
+}
+function stopFx(off = true) { const was = fxMode; fxToken++; fxMode = null; updateFx(); if (was && off) setTimeout(allOff, 60); }
+async function startFx(mode) {
+  if (running) return;
+  if (fxMode === mode) { stopFx(); return; }
+  stopFx(false); if (lampOn) setLamp(false);
+  fxMode = mode; const tok = ++fxToken; updateFx(); log('info', `Efekt: ${mode}`);
+  const alive = () => fxToken === tok && !running;
+  const all = (list, c) => Promise.all(list.map(p => setColor(p, typeof c === 'function' ? c(p) : c)));
+  if (mode === 'disco') {
+    while (alive()) {
+      const list = readyPods(); if (!list.length) { await sleep(500); continue; }
+      let prev = null;
+      await all(list, () => { let c; do { c = rnd(DISCO); } while (c === prev && DISCO.length > 1); prev = c; return c; });
+      await sleep(320);
+    }
+  } else {
+    let k = 0;
+    while (alive()) {
+      const list = readyPods(); if (!list.length) { await sleep(500); continue; }
+      const grp = list.length > 1 ? list.filter((_, i) => i % 2 === k) : list;
+      for (let f = 0; f < 2 && alive(); f++) {
+        await all(grp, BLUE); await sleep(90);
+        await all(grp, OFF); await sleep(90);
+      }
+      k ^= 1; await sleep(list.length > 1 ? 120 : 380);
+    }
+  }
+}
+$('#disco').onclick = () => startFx('disco');
+$('#police').onclick = () => startFx('police');
+
+// ——— Konto Google + zapis online (Firebase) ———
+const FB_CONFIG = { apiKey: "AIzaSyDRfKm3OGUZgDugoWsE6BsPdqM_svP_eng", authDomain: "blazepod-trener.firebaseapp.com", projectId: "blazepod-trener", storageBucket: "blazepod-trener.firebasestorage.app", messagingSenderId: "714200341533", appId: "1:714200341533:web:e1c964825b62097867faf4" };
+let fbUser = null, db = null, unsubs = [];
+const fbOk = () => typeof firebase !== 'undefined' && FB_CONFIG && FB_CONFIG.apiKey && location.protocol === 'https:';
+function setCloud(state, info) {
+  const map = { ok: ['zapisane ✓', 'pill ok'], sync: ['zapisuję…', 'pill'], off: ['offline', 'pill bad'], guest: ['gość', 'pill'] };
+  const el = $('#cloud'); [el.textContent, el.className] = map[state]; el.title = info || '';
+}
+const userRef = () => db.collection('users').doc(fbUser.uid);
+function renderAccount() {
+  const u = fbUser;
+  $('#login').classList.toggle('hide', !!u); $('#logout').classList.toggle('hide', !u);
+  $('#acctPic').classList.toggle('hide', !u?.photoURL); if (u?.photoURL) $('#acctPic').src = u.photoURL;
+  $('#acctName').textContent = u ? (u.displayName || u.email) : 'Nie zalogowano';
+  $('#acctMail').textContent = u ? u.email : (fbOk() ? 'Grasz jako gość, wyniki się nie zapisują.' : 'Logowanie działa w wersji online Trenera.');
+  $('#newName').disabled = $('#addPlayer').disabled = !u;
+  $('#newName').placeholder = u ? 'Imię nowego zawodnika' : 'Zaloguj się, aby dodać zawodnika';
+  $('#import').disabled = !u;
+  if (!u) setCloud('guest');
+}
+if (fbOk()) {
+  firebase.initializeApp(FB_CONFIG);
+  db = firebase.firestore();
+  db.enablePersistence({ synchronizeTabs: true }).catch(() => {});
+  firebase.auth().onAuthStateChanged(u => {
+    fbUser = u; unsubs.forEach(f => f()); unsubs = []; players = []; history = [];
+    renderAccount(); renderPlayers();
+    if (!u) return;
+    log('info', `Zalogowano: ${u.email}`);
+    userRef().set({ name: u.displayName || '', email: u.email || '', lastSeen: Date.now() }, { merge: true }).catch(() => {});
+    unsubs.push(userRef().collection('players').onSnapshot(snap => {
+      players = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (a.created || 0) - (b.created || 0));
+      renderPlayers();
+    }, e => { setCloud('off', e.message); log('err', 'Zawodnicy: ' + e.message); }));
+    unsubs.push(userRef().collection('results').onSnapshot({ includeMetadataChanges: true }, snap => {
+      history = snap.docs.map(d => d.data()).sort((a, b) => a.ts - b.ts);
+      setCloud(snap.metadata.hasPendingWrites ? 'sync' : snap.metadata.fromCache ? 'off' : 'ok');
+      renderHistory();
+    }, e => { setCloud('off', e.message); log('err', 'Wyniki: ' + e.message); }));
+  });
+} else { renderAccount(); }
+$('#login').onclick = async () => {
+  if (!fbOk()) { status('Logowanie działa tylko w wersji online Trenera (adres https).', true); return; }
+  const prov = new firebase.auth.GoogleAuthProvider(); prov.setCustomParameters({ prompt: 'select_account' });
+  try { await firebase.auth().signInWithPopup(prov); }
+  catch (e) {
+    if (e.code === 'auth/popup-blocked') { firebase.auth().signInWithRedirect(prov); return; }
+    if (e.code !== 'auth/popup-closed-by-user' && e.code !== 'auth/cancelled-popup-request') status('Logowanie nie powiodło się: ' + e.message, true);
+  }
+};
+$('#logout').onclick = () => { firebase.auth().signOut(); S.set('bp_curPlayer', ''); status('Wylogowano. Grasz jako gość.'); };
+function pushResults(list) {
+  if (!fbUser) return;
+  for (let i = 0; i < list.length; i += 400) {
+    const b = db.batch();
+    for (const h of list.slice(i, i + 400)) {
+      const clean = JSON.parse(JSON.stringify({ ...h, name: playerName(h.pid) || h.name || '', modeName: MODE_NAMES[h.mode] || h.mode }));
+      b.set(userRef().collection('results').doc(`${h.ts}_${h.pid}`), clean);
+    }
+    b.commit().catch(e => { setCloud('off', e.message); log('err', 'Zapis wyników: ' + e.message); });
+  }
+}
+
+// ——— Zawodnicy i historia ———
+let players = [];
+let history = [];
+const GUEST = '';
+
+function renderPlayers() {
+  const cur = S.get('bp_curPlayer', GUEST);
+  const opts = `<option value="">Bez zawodnika (gość, bez zapisu)</option>` + players.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('');
+  $('#player').innerHTML = opts; $('#player').value = players.some(p => p.id === cur) ? cur : GUEST;
+  const dopts = (lbl) => `<option value="">${lbl} (gość)</option>` + players.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('');
+  const a = $('#pA').value, b = $('#pB').value;
+  $('#pA').innerHTML = dopts('Niebieski'); $('#pB').innerHTML = dopts('Pomarańczowy');
+  $('#pA').value = players.some(p => p.id === a) ? a : ''; $('#pB').value = players.some(p => p.id === b) ? b : '';
+  $('#delPlayer').disabled = !$('#player').value;
+  renderHistory();
+}
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
+const playerName = id => players.find(p => p.id === id)?.name;
+$('#player').onchange = () => { S.set('bp_curPlayer', $('#player').value); $('#delPlayer').disabled = !$('#player').value; renderHistory(); };
+$('#addPlayer').onclick = () => {
+  const name = $('#newName').value.trim(); if (!name) { $('#newName').focus(); return; }
+  if (players.some(p => p.name.toLowerCase() === name.toLowerCase())) { status(`Zawodnik ${name} już jest na liście.`, true); return; }
+  if (!fbUser) { status('Zaloguj się, aby dodawać zawodników.', true); return; }
+  const p = { id: 'p' + Date.now().toString(36), name }; players.push(p);
+  userRef().collection('players').doc(p.id).set({ name, created: Date.now() }).catch(e => log('err', 'Zawodnik: ' + e.message));
+  S.set('bp_curPlayer', p.id); $('#newName').value = ''; renderPlayers(); status(`Dodano zawodnika: ${name}.`);
+};
+$('#newName').onkeydown = e => { if (e.key === 'Enter') $('#addPlayer').click(); };
+$('#delPlayer').onclick = () => {
+  const id = $('#player').value; if (!id) return; const name = playerName(id);
+  if (!confirm(`Usunąć zawodnika ${name} razem z jego historią?`)) return;
+  S.set('bp_curPlayer', GUEST); status(`Usuwam: ${name}…`);
+  const b = db.batch();
+  history.filter(h => h.pid === id).forEach(h => b.delete(userRef().collection('results').doc(`${h.ts}_${h.pid}`)));
+  b.delete(userRef().collection('players').doc(id));
+  b.commit().then(() => status(`Usunięto: ${name}.`)).catch(e => status('Nie udało się usunąć: ' + e.message, true));
+};
+$('#export').onclick = () => {
+  const blob = new Blob([JSON.stringify({ players, history, saved: new Date().toISOString() }, null, 1)], { type: 'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `blazepod-wyniki-${new Date().toISOString().slice(0,10)}.json`;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+};
+$('#import').onchange = async () => {
+  const f = $('#import').files[0]; if (!f) return;
+  try {
+    const d = JSON.parse(await f.text());
+    if (!Array.isArray(d.players) || !Array.isArray(d.history)) throw new Error('to nie jest kopia wyników');
+    if (!fbUser) throw new Error('najpierw się zaloguj');
+    for (const p of d.players) if (!players.some(x => x.id === p.id)) { players.push(p); userRef().collection('players').doc(p.id).set({ name: p.name, created: Date.now() }); }
+    pushResults(d.history.filter(h => players.some(p => p.id === h.pid)));
+    status(`Wczytano kopię: ${d.players.length} zawodników, ${d.history.length} treningów.`);
+  } catch (e) { status('Nie udało się wczytać pliku: ' + e.message, true); }
+  $('#import').value = '';
+};
+function renderHistory() {
+  const id = $('#player').value;
+  if (!id) { $('#histWho').textContent = 'Wybierz zawodnika, aby zobaczyć jego wyniki.'; $('#hist').innerHTML = ''; $('#records').innerHTML = ''; return; }
+  const mine = history.filter(h => h.pid === id);
+  $('#histWho').textContent = `${playerName(id)} · treningów: ${mine.length}`;
+  const fmt = v => v == null ? '—' : v + ' ms';
+  const fmtH = (h, v) => v == null ? '—' : h.mode === 'stopwatch' ? (v / 1000).toFixed(3) + ' s' : v + ' ms';
+  $('#hist').innerHTML = mine.slice(-30).reverse().map(h => {
+    const d = new Date(h.ts);
+    const extra = h.mode === 'duel' ? ` (${h.won ? 'wygrana' : h.won === false ? 'przegrana' : 'remis'} ${h.hits}:${h.opp})` : '';
+    return `<tr><td>${d.toLocaleDateString('pl-PL')} ${d.toTimeString().slice(0,5)}</td><td>${MODE_NAMES[h.mode] || h.mode}${extra}</td><td class="n">${h.hits}</td><td class="n">${h.miss}</td><td class="n">${h.mode === 'traps' ? h.errs : '—'}</td><td class="n">${fmtH(h, h.avg)}</td><td class="n">${fmtH(h, h.best)}</td></tr>`;
+  }).join('') || '<tr><td colspan="7" class="muted">Brak treningów. Wybierz tryb i kliknij Start.</td></tr>';
+  const withAvg = mine.filter(h => h.avg != null && h.mode !== 'stopwatch');
+  const sw = mine.filter(h => h.mode === 'stopwatch' && h.best != null);
+  const bestSw = sw.length ? Math.min(...sw.map(h => h.best)) : null;
+  const bestAvg = withAvg.length ? Math.min(...withAvg.map(h => h.avg)) : null;
+  const bestOne = withAvg.length ? Math.min(...withAvg.map(h => h.best)) : null;
+  const timed = mine.filter(h => h.mode === 'timed');
+  const bestTimed = timed.length ? timed.reduce((a, h) => h.hits > a.hits ? h : a) : null;
+  const last5 = withAvg.slice(-5), prev5 = withAvg.slice(-10, -5);
+  const mean = a => Math.round(a.reduce((s, h) => s + h.avg, 0) / a.length);
+  const trend = last5.length && prev5.length ? mean(last5) - mean(prev5) : null;
+  $('#records').innerHTML = `
+    <div class="stat"><span class="muted">Najlepsza średnia</span><b>${fmt(bestAvg)}</b></div>
+    <div class="stat"><span class="muted">Najszybsze uderzenie</span><b>${fmt(bestOne)}</b></div>
+    <div class="stat"><span class="muted">Rekord „Na czas”</span><b>${bestTimed ? `${bestTimed.hits} / ${bestTimed.dur}s` : '—'}</b></div>
+    <div class="stat"><span class="muted">Rekord „Start 3-2-1”</span><b>${bestSw == null ? '—' : (bestSw / 1000).toFixed(3) + ' s'}</b></div>
+    <div class="stat"><span class="muted">Forma (5 ostatnich)</span><b style="color:${trend == null ? 'inherit' : trend <= 0 ? 'var(--accent)' : 'var(--err)'}">${trend == null ? '—' : (trend <= 0 ? '▼ ' : '▲ ') + Math.abs(trend) + ' ms'}</b></div>`;
+}
+
+// ——— Tryby ———
+function applyMode() {
+  const m = $('#mode').value; S.set('bp_mode', m);
+  document.querySelectorAll('[data-for]').forEach(el => el.classList.toggle('hide', !el.dataset.for.split(' ').includes(m)));
+  $('#duelPlayers').classList.toggle('hide', m !== 'duel');
+  $('#soloView').classList.toggle('hide', m === 'duel'); $('#duelView').classList.toggle('hide', m !== 'duel');
+  $('#modeHelp').textContent = MODE_HELP[m];
+  refreshStart();
+}
+$('#mode').value = S.get('bp_mode', 'reaction'); $('#mode').onchange = applyMode;
+
+let running = false;
+function refreshStart(keepText) {
+  const n = readyPods().length, m = $('#mode').value;
+  const need = m === 'duel' ? 2 : 1;
+  $('#start').disabled = running || n < need;
+  $('#dcAll').disabled = ![...pods.values()].some(p => p.device.gatt.connected);
+  if (!running && !keepText) $('#progress').textContent = n >= need ? `Gotowe: ${n} ${n === 1 ? 'pad' : 'pady'}. Kliknij Start.` : (m === 'duel' ? 'Pojedynek wymaga co najmniej 2 padów.' : 'Dodaj co najmniej jeden pad.');
+  if (!running && !keepText && m === 'duel') $('#duelProgress').textContent = n >= 2 ? 'Gotowe. Kliknij Start.' : 'Pojedynek wymaga co najmniej 2 padów.';
+}
+
+// Czekanie z możliwością przerwania
+async function wait(ms) { const end = performance.now() + ms; while (running && performance.now() < end) await sleep(Math.min(50, end - performance.now())); }
+const rnd = arr => arr[Math.floor(Math.random() * arr.length)];
+function pickPod(list, prev) { if (list.length === 1) return list[0]; let p; do { p = rnd(list); } while (p === prev); return p; }
+
+// Zapal pad i czekaj na uderzenie albo limit czasu
+function lightAndWait(pod, rgb, limit) {
+  return new Promise(resolve => {
+    let done = false; const t0 = performance.now();
+    const finish = r => { if (done) return; done = true; clearTimeout(timer); clearInterval(stopper); pod.waiter = null; resolve(r); };
+    pod.waiter = ms => finish(ms == null ? { hit: false, lost: true } : { hit: true, ms: ms || Math.round(performance.now() - t0) });
+    const timer = setTimeout(() => { finish({ hit: false }); setColor(pod, OFF); }, limit);
+    const stopper = setInterval(() => { if (!running) { finish({ hit: false, stopped: true }); setColor(pod, OFF); } }, 50);
+    setColor(pod, rgb, true);
+  });
+}
+
+function newStats() { return { times: [], hits: 0, miss: 0, errs: 0 }; }
+const avgOf = t => t.length ? Math.round(t.reduce((a, b) => a + b, 0) / t.length) : null;
+function showSolo(st, last) {
+  if (last !== undefined) $('#last').textContent = last;
+  $('#hits').textContent = st.hits; $('#miss').textContent = st.miss; $('#errs').textContent = st.errs;
+  $('#avg').textContent = st.times.length ? avgOf(st.times) + ' ms' : '—';
+  $('#best').textContent = st.times.length ? Math.min(...st.times) + ' ms' : '—';
+}
+function record(st, r) {
+  if (r.stopped) return;
+  if (r.hit) { st.hits++; st.times.push(r.ms); SND.hit(); showSolo(st, r.ms + ' ms'); }
+  else { st.miss++; SND.miss(); showSolo(st, 'pudło'); }
+}
+
+// Mignięcie wszystkich padów naraz (colorFor: kolor dla danego padu)
+async function flashAll(colorFor, onMs) {
+  const list = readyPods();
+  await Promise.all(list.map(p => setColor(p, colorFor(p))));
+  await sleep(onMs);
+  await Promise.all(list.map(p => setColor(p, OFF)));
+}
+// Odliczanie 3-2-1: dźwięk + mignięcie padów, na START długie zielone
+async function countdown(el, colorFor = () => COLORS.biały, goStay = false) {
+  for (const n of [3, 2, 1]) {
+    if (!running) return; el.textContent = n; SND.tick();
+    const t = performance.now(); await flashAll(colorFor, 300);
+    await wait(Math.max(0, 1000 - (performance.now() - t)));
+  }
+  if (!running) return;
+  el.textContent = 'START'; SND.go(); if (goStay) return; await flashAll(() => GREEN, 450); await wait(250);
+}
+// Zakończenie: fanfara + 3 mignięcia
+async function finale(colorFor = () => GREEN) {
+  SND.end();
+  for (let i = 0; i < 3; i++) { await flashAll(colorFor, 250); await sleep(200); }
+}
+
+const MODES = {
+  async stopwatch(st, o) {
+    const list = readyPods(); if (!list.length || !running) return;
+    const t0 = performance.now();
+    $('#progress').textContent = 'Czas leci! Dotknij dowolnego pada.';
+    const tick = setInterval(() => { $('#last').textContent = ((performance.now() - t0) / 1000).toFixed(2) + ' s'; }, 50);
+    const res = await new Promise(resolve => {
+      let done = false;
+      const fin = r => { if (done) return; done = true; list.forEach(p => p.waiter = null); clearTimeout(to); clearInterval(stopper); resolve(r); };
+      list.forEach(p => p.waiter = ms => fin(ms == null ? null : { pod: p, ms: ms || Math.round(performance.now() - t0) }));
+      const to = setTimeout(() => fin(null), o.maxT * 1000);
+      const stopper = setInterval(() => { if (!running) fin(null); }, 50);
+      list.forEach(p => setColor(p, GREEN, true));
+    });
+    clearInterval(tick);
+    await allOff();
+    if (res) {
+      st.hits = 1; st.times.push(res.ms); SND.hit();
+      $('#last').textContent = (res.ms / 1000).toFixed(3) + ' s';
+      $('#best').textContent = (res.ms / 1000).toFixed(3) + ' s'; $('#hits').textContent = 1;
+      log('info', `Start 3-2-1: ${res.ms} ms (pad ${res.pod.num})`);
+    } else if (running) { st.miss = 1; SND.miss(); $('#last').textContent = 'koniec czasu'; }
+  },
+  async reaction(st, o) {
+    let prev = null;
+    for (let i = 0; i < o.rounds && running; i++) {
+      const list = readyPods(); if (!list.length) break;
+      $('#progress').textContent = `Powtórzenie ${i + 1} z ${o.rounds}`;
+      await wait((o.pmin + Math.random() * Math.max(0, o.pmax - o.pmin)) * 1000); if (!running) break;
+      const pod = pickPod(list, prev); prev = pod;
+      record(st, await lightAndWait(pod, rnd(RANDOM_COLORS), o.limit));
+    }
+  },
+  async sequence(st, o) {
+    for (let i = 0; i < o.rounds && running; i++) {
+      const list = readyPods(); if (!list.length) break;
+      for (const pod of list) {
+        if (!running) break;
+        $('#progress').textContent = `Runda ${i + 1} z ${o.rounds} · pad ${pod.num}`;
+        record(st, await lightAndWait(pod, GREEN, o.limit));
+        await wait(150);
+      }
+    }
+  },
+  async timed(st, o) {
+    const end = performance.now() + o.dur * 1000; let prev = null;
+    while (running && performance.now() < end) {
+      const left = end - performance.now();
+      $('#progress').textContent = `Zostało ${Math.ceil(left / 1000)} s`;
+      const list = readyPods(); if (!list.length) break;
+      const pod = pickPod(list, prev); prev = pod;
+      const r = await lightAndWait(pod, rnd(RANDOM_COLORS), Math.min(o.limit, left));
+      if (!r.hit && performance.now() >= end) break;
+      record(st, r); await wait(120);
+    }
+  },
+  async traps(st, o) {
+    let prev = null;
+    for (let i = 0; i < o.rounds && running; i++) {
+      const list = readyPods(); if (!list.length) break;
+      $('#progress').textContent = `Powtórzenie ${i + 1} z ${o.rounds}`;
+      await wait((o.pmin + Math.random() * Math.max(0, o.pmax - o.pmin)) * 1000); if (!running) break;
+      const pod = pickPod(list, prev); prev = pod;
+      if (Math.random() < 0.65) record(st, await lightAndWait(pod, GREEN, o.limit));
+      else {
+        const r = await lightAndWait(pod, RED, Math.max(800, o.limit * 0.6));
+        if (r.stopped) break;
+        if (r.hit) { st.errs++; SND.error(); showSolo(st, 'czerwony!'); }
+        else showSolo(st, 'ominięty ✓');
+      }
+    }
+  }
+};
+
+async function runDuel(o) {
+  const list = readyPods();
+  const teams = [list.filter((_, i) => i % 2 === 0), list.filter((_, i) => i % 2 === 1)];
+  const colors = [BLUE, ORANGE], ids = [$('#pA').value, $('#pB').value];
+  const names = [playerName(ids[0]) || 'Niebieski', playerName(ids[1]) || 'Pomarańczowy'];
+  $('#dAname').textContent = names[0]; $('#dBname').textContent = names[1];
+  const st = [newStats(), newStats()];
+  const draw = () => {
+    $('#dA').textContent = st[0].hits; $('#dB').textContent = st[1].hits;
+    $('#dAavg').textContent = `średnia ${avgOf(st[0].times) ?? '—'} ms · pudła ${st[0].miss}`;
+    $('#dBavg').textContent = `średnia ${avgOf(st[1].times) ?? '—'} ms · pudła ${st[1].miss}`;
+  };
+  draw();
+  const teamColor = p => colors[teams[0].includes(p) ? 0 : 1];
+  await countdown($('#duelProgress'), teamColor);
+  const end = performance.now() + o.dur * 1000;
+  const timerEl = setInterval(() => { if (running) $('#duelProgress').textContent = `Zostało ${Math.max(0, Math.ceil((end - performance.now()) / 1000))} s`; }, 250);
+  await Promise.all([0, 1].map(async k => {
+    let prev = null;
+    while (running && performance.now() < end) {
+      const mine = teams[k].filter(p => p.authed); if (!mine.length) break;
+      const pod = pickPod(mine, prev); prev = pod;
+      const left = end - performance.now();
+      const r = await lightAndWait(pod, colors[k], Math.min(o.limit, left));
+      if (r.stopped || (!r.hit && performance.now() >= end)) break;
+      if (r.hit) { st[k].hits++; st[k].times.push(r.ms); beep(k ? 700 : 950, 0.07); } else st[k].miss++;
+      draw(); await wait(100);
+    }
+  }));
+  clearInterval(timerEl);
+  const winner = st[0].hits === st[1].hits ? null : (st[0].hits > st[1].hits ? 0 : 1);
+  $('#duelProgress').textContent = winner == null ? `Remis ${st[0].hits}:${st[1].hits}` : `Wygrywa ${names[winner]} ${st[winner].hits}:${st[1 - winner].hits}`;
+  if (running) await finale(p => winner == null ? teamColor(p) : colors[winner]);
+  const ts = Date.now();
+  const duelRes = [];
+  [0, 1].forEach(k => { if (ids[k]) duelRes.push({ pid: ids[k], ts: ts + k, mode: 'duel', dur: o.dur, hits: st[k].hits, miss: st[k].miss, errs: 0, avg: avgOf(st[k].times), best: st[k].times.length ? Math.min(...st[k].times) : null, opp: st[1 - k].hits, won: winner == null ? null : winner === k }); });
+  if (duelRes.length) pushResults(duelRes);
+  log('info', `Pojedynek: ${names[0]} ${st[0].hits} : ${st[1].hits} ${names[1]}`);
+}
+
+$('#start').onclick = async () => {
+  audio();
+  if (lampOn) setLamp(false);
+  stopFx(false);
+  running = true; $('#start').disabled = true; $('#stop').disabled = false; $('#mode').disabled = true; $('#lamp').disabled = $('#disco').disabled = $('#police').disabled = true;
+  const m = $('#mode').value;
+  const o = {
+    rounds: Math.max(1, +$('#rounds').value || 20), dur: Math.max(5, +$('#dur').value || 30),
+    limit: Math.max(500, (+$('#tmo').value || 3) * 1000),
+    pmin: Math.max(0, +$('#pmin').value || 0), pmax: Math.max(0, +$('#pmax').value || 0),
+    maxT: Math.max(5, +$('#maxT').value || 60)
+  };
+  await allOff();
+  try {
+    if (m === 'duel') { await runDuel(o); }
+    else {
+      const st = newStats(); showSolo(st, '— ms');
+      if (m === 'stopwatch') await countdown($('#last'), () => RED, true); else await countdown($('#last'));
+      if (running) await MODES[m](st, o);
+      const pid = $('#player').value;
+      const summary = m === 'stopwatch' ? `Start 3-2-1: ${st.times.length ? (st.times[0] / 1000).toFixed(3) + ' s' : 'bez pomiaru'}` : `${MODE_NAMES[m]}: ${st.hits} trafień, ${st.miss} pudeł${m === 'traps' ? `, ${st.errs} błędów` : ''}, średnia ${avgOf(st.times) ?? '—'} ms`;
+      $('#progress').textContent = (running ? 'Koniec. ' : 'Przerwano. ') + summary + (pid ? ` · zapisano dla: ${playerName(pid)}` : ' · gość, bez zapisu');
+      if (pid && st.hits + st.miss > 0) {
+        pushResults([{ pid, ts: Date.now(), mode: m, dur: o.dur, hits: st.hits, miss: st.miss, errs: st.errs, avg: avgOf(st.times), best: st.times.length ? Math.min(...st.times) : null }]);
+      }
+      log('info', summary);
+    }
+    if (running && m !== 'duel') await finale();
+  } catch (e) { log('err', 'Trening: ' + e.message); }
+  if (!running) await allOff();
+  running = false; $('#stop').disabled = true; $('#mode').disabled = false; $('#lamp').disabled = $('#disco').disabled = $('#police').disabled = false;
+  renderHistory(); refreshStart(true);
+};
+$('#stop').onclick = () => { running = false; };
+$('#dcAll').onclick = async () => {
+  running = false; if (lampOn) setLamp(false); stopFx(false);
+  await sleep(200); await allOff(); await sleep(200);
+  for (const p of pods.values()) { p.manual = true; try { p.device.gatt.disconnect(); } catch(e) {} }
+  status('Wszystkie pady rozłączone. Możesz je wyłączyć i odłożyć do ładowania.');
+  refreshStart();
+};
+
+$('#clear').onclick = () => { lines.length = 0; logEl.textContent = ''; };
+$('#copy').onclick = async () => {
+  try { await navigator.clipboard.writeText(lines.join('\n')); status('Dziennik skopiowany.'); }
+  catch (e) { const r = document.createRange(); r.selectNodeContents(logEl); const s = getSelection(); s.removeAllRanges(); s.addRange(r); status('Zaznaczyłem dziennik — skopiuj Ctrl+C.'); }
+};
+
+renderPlayers(); applyMode();
+</script>
+</body>
+</html>
