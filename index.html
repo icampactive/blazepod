@@ -158,9 +158,10 @@ code { font-family: var(--mono); font-size: 12.5px; }
           <option value="reaction">Reakcja: losowy pad, losowy kolor</option>
           <option value="sequence">Sekwencja: pady po kolei 1→2→3…</option>
           <option value="timed">Na czas: ile trafień w X sekund</option>
-          <option value="traps">Pułapki: bij zielony, omijaj czerwony</option>
+          <option value="traps">Pułapki: bij zielony, omijaj inne kolory</option>
           <option value="duel">Pojedynek: dwóch graczy</option>
-          <option value="stopwatch">Start 3-2-1: pomiar czasu</option>
+          <option value="stopwatch">3-2-1 biegnij do pozostałych</option>
+          <option value="shuttle">3-2-1 biegnij z powrotem do zielonego</option>
         </select>
       </div>
       <p id="modeHelp" class="muted"></p>
@@ -170,8 +171,8 @@ code { font-family: var(--mono); font-size: 12.5px; }
         <div class="field" data-for="reaction sequence timed traps duel"><label for="tmo">Limit na pad (s)</label><input id="tmo" type="number" min="0.5" max="30" step="0.5" value="3"></div>
         <div class="field" data-for="reaction traps"><label for="pmin">Przerwa od (s)</label><input id="pmin" type="number" min="0" max="10" step="0.1" value="0.6"></div>
         <div class="field" data-for="reaction traps"><label for="pmax">do (s)</label><input id="pmax" type="number" min="0" max="10" step="0.1" value="2"></div>
-        <div class="field" data-for="stopwatch"><label for="maxT">Maks. czas (s)</label><input id="maxT" type="number" min="5" max="600" value="60"></div>
-        <div class="field" data-for="stopwatch"><label for="startPad">Pad startowy (nr)</label><input id="startPad" type="number" min="1" max="20" value="1"></div>
+        <div class="field" data-for="stopwatch shuttle"><label for="maxT">Maks. czas (s)</label><input id="maxT" type="number" min="5" max="600" value="60"></div>
+        <div class="field" data-for="stopwatch shuttle"><label for="startPad">Pad startowy (nr)</label><input id="startPad" type="number" min="1" max="20" value="1"></div>
         <label class="row" data-for="timed" for="withTraps" style="gap:6px;align-self:end"><input type="checkbox" id="withTraps"> Z pułapkami (−1 pkt)</label>
       </div>
       <div class="row hide" id="duelPlayers" style="gap:12px">
@@ -244,13 +245,14 @@ const COLORS = { zielony:[0,255,0], czerwony:[255,0,0], niebieski:[0,0,255], ż�
 const OFF = [0,0,0], GREEN = COLORS.zielony, RED = COLORS.czerwony, BLUE = COLORS.niebieski, ORANGE = COLORS.pomarańczowy;
 const RANDOM_COLORS = ['zielony','niebieski','żółty','fioletowy','turkusowy','biały'].map(k => COLORS[k]);
 const TRAP_COLORS = ['czerwony','niebieski','żółty','fioletowy','turkusowy','pomarańczowy','biały'].map(k => COLORS[k]);
-const MODE_NAMES = { reaction:'Reakcja', sequence:'Sekwencja', timed:'Na czas', traps:'Pułapki', duel:'Pojedynek', stopwatch:'Start 3-2-1' };
+const MODE_NAMES = { reaction:'Reakcja', sequence:'Sekwencja', timed:'Na czas', traps:'Pułapki', duel:'Pojedynek', stopwatch:'3-2-1 biegnij do pozostałych', shuttle:'3-2-1 biegnij z powrotem' };
 const MODE_HELP = {
   reaction: 'Losowy pad zapala się losowym kolorem po losowej przerwie. Uderz jak najszybciej. Czas mierzy sam pad.',
   sequence: 'Pady zapalają się po kolei według numerów. Przydaje się do ćwiczeń biegowych i zmiany kierunku.',
   timed: 'Bez przerw: trafiasz, od razu zapala się następny pad. Liczy się, ile zdążysz w zadanym czasie.',
   traps: 'Jeden pad świeci na zielono, pozostałe w innych kolorach to pułapki. Bij tylko zielony! Trafienie zielonego +1, dotknięcie pułapki −1 (wynik może być ujemny). Z jednym padem pułapki pojawiają się na zmianę z zielonym.',
   duel: 'Pady dzielą się na dwie drużyny: nieparzyste niebieskie, parzyste pomarańczowe. Każdy bije tylko swoje. Wygrywa więcej trafień. Potrzeba co najmniej 2 padów.',
+  shuttle: 'Pad startowy odlicza 3-2-1 na czerwono, pozostałe świecą na niebiesko. Na START biegnij i dotknij dowolnego niebieskiego pachołka, wtedy pad startowy zapala się na zielono. Wróć i dotknij zielonego, to zatrzymuje czas. Zapisuje czas do pachołka i czas całkowity. Potrzeba co najmniej 2 padów.',
   stopwatch: 'Pad startowy odlicza 3-2-1 na czerwono, pozostałe pady świecą na niebiesko jak pachołki. Na zielonym rusza stoper. Dotknięcie dowolnego pachołka zatrzymuje czas (z jednym padem: dotknięcie tego pada).'
 };
 
@@ -672,15 +674,17 @@ function renderHistory() {
   const mine = history.filter(h => h.pid === id);
   $('#histWho').textContent = `${playerName(id)} · treningów: ${mine.length}`;
   const fmt = v => v == null ? '—' : v + ' ms';
-  const fmtH = (h, v) => v == null ? '—' : h.mode === 'stopwatch' ? (v / 1000).toFixed(3) + ' s' : v + ' ms';
+  const fmtH = (h, v) => v == null ? '—' : (h.mode === 'stopwatch' || h.mode === 'shuttle') ? (v / 1000).toFixed(3) + ' s' : v + ' ms';
   $('#hist').innerHTML = mine.slice(-30).reverse().map(h => {
     const d = new Date(h.ts);
     const extra = h.mode === 'duel' ? ` (${h.won ? 'wygrana' : h.won === false ? 'przegrana' : 'remis'} ${h.hits}:${h.opp})` : '';
     return `<tr><td>${d.toLocaleDateString('pl-PL')} ${d.toTimeString().slice(0,5)}</td><td>${MODE_NAMES[h.mode] || h.mode}${extra}</td><td class="n">${h.hits}</td><td class="n">${h.miss}</td><td class="n">${h.mode === 'traps' || h.errs ? h.errs : '—'}</td><td class="n">${fmtH(h, h.avg)}</td><td class="n">${fmtH(h, h.best)}</td></tr>`;
   }).join('') || '<tr><td colspan="7" class="muted">Brak treningów. Wybierz tryb i kliknij Start.</td></tr>';
-  const withAvg = mine.filter(h => h.avg != null && h.mode !== 'stopwatch');
+  const withAvg = mine.filter(h => h.avg != null && h.mode !== 'stopwatch' && h.mode !== 'shuttle');
   const sw = mine.filter(h => h.mode === 'stopwatch' && h.best != null);
   const bestSw = sw.length ? Math.min(...sw.map(h => h.best)) : null;
+  const sh = mine.filter(h => h.mode === 'shuttle' && h.best != null);
+  const bestSh = sh.length ? Math.min(...sh.map(h => h.best)) : null;
   const bestAvg = withAvg.length ? Math.min(...withAvg.map(h => h.avg)) : null;
   const bestOne = withAvg.length ? Math.min(...withAvg.map(h => h.best)) : null;
   const timed = mine.filter(h => h.mode === 'timed');
@@ -692,7 +696,8 @@ function renderHistory() {
     <div class="stat"><span class="muted">Najlepsza średnia</span><b>${fmt(bestAvg)}</b></div>
     <div class="stat"><span class="muted">Najszybsze uderzenie</span><b>${fmt(bestOne)}</b></div>
     <div class="stat"><span class="muted">Rekord „Na czas”</span><b>${bestTimed ? `${bestTimed.hits} / ${bestTimed.dur}s` : '—'}</b></div>
-    <div class="stat"><span class="muted">Rekord „Start 3-2-1”</span><b>${bestSw == null ? '—' : (bestSw / 1000).toFixed(3) + ' s'}</b></div>
+    <div class="stat"><span class="muted">Rekord „Biegnij do pozostałych”</span><b>${bestSw == null ? '—' : (bestSw / 1000).toFixed(3) + ' s'}</b></div>
+    <div class="stat"><span class="muted">Rekord „Biegnij z powrotem”</span><b>${bestSh == null ? '—' : (bestSh / 1000).toFixed(3) + ' s'}</b></div>
     <div class="stat"><span class="muted">Forma (5 ostatnich)</span><b style="color:${trend == null ? 'inherit' : trend <= 0 ? 'var(--accent)' : 'var(--err)'}">${trend == null ? '—' : (trend <= 0 ? '▼ ' : '▲ ') + Math.abs(trend) + ' ms'}</b></div>`;
 }
 
@@ -710,7 +715,7 @@ $('#mode').value = S.get('bp_mode', 'reaction'); $('#mode').onchange = applyMode
 let running = false;
 function refreshStart(keepText) {
   const n = readyPods().length, m = $('#mode').value;
-  const need = m === 'duel' ? 2 : 1;
+  const need = m === 'duel' || m === 'shuttle' ? 2 : 1;
   $('#start').disabled = running || n < need;
   $('#dcAll').disabled = ![...pods.values()].some(p => p.device.gatt.connected);
   if (!running && !keepText) $('#progress').textContent = n >= need ? `Gotowe: ${n} ${n === 1 ? 'pad' : 'pady'}. Kliknij Start.` : (m === 'duel' ? 'Pojedynek wymaga co najmniej 2 padów.' : 'Dodaj co najmniej jeden pad.');
@@ -826,7 +831,51 @@ const MODES = {
       st.hits = 1; st.times.push(res.ms); SND.hit();
       $('#last').textContent = (res.ms / 1000).toFixed(3) + ' s';
       $('#best').textContent = (res.ms / 1000).toFixed(3) + ' s'; $('#hits').textContent = 1;
-      log('info', `Start 3-2-1: ${res.ms} ms (pachołek ${res.pod.num})`);
+      log('info', `Biegnij do pozostałych: ${res.ms} ms (pachołek ${res.pod.num})`);
+    } else if (running) { st.miss = 1; SND.miss(); $('#last').textContent = 'koniec czasu'; }
+  },
+  async shuttle(st, o) {
+    const list = readyPods(); if (list.length < 2 || !running) return;
+    const startPod = list.find(p => p.num === o.startPad) || list[0];
+    const cones = list.filter(p => p !== startPod);
+    await allOff();
+    await Promise.all(cones.map(p => setColor(p, BLUE)));
+    $('#progress').textContent = `Pad startowy: ${startPod.num}. Pachołki: ${cones.map(p => p.num).join(', ')}.`;
+    for (const n of [3, 2, 1]) {
+      if (!running) return;
+      $('#last').textContent = n; SND.tick();
+      const t = performance.now(); await setColor(startPod, RED); await sleep(300); await setColor(startPod, OFF);
+      await wait(Math.max(0, 1000 - (performance.now() - t)));
+    }
+    if (!running) return;
+    $('#last').textContent = 'START'; SND.go();
+    const t0 = performance.now();
+    const tick = setInterval(() => { $('#last').textContent = ((performance.now() - t0) / 1000).toFixed(2) + ' s'; }, 50);
+    const waitTap = (targets, light) => new Promise(resolve => {
+      let done = false;
+      const fin = r => { if (done) return; done = true; targets.forEach(p => p.waiter = null); clearTimeout(to); clearInterval(stopper); resolve(r); };
+      targets.forEach(p => p.waiter = ms => fin(ms == null ? null : { pod: p, t: performance.now() }));
+      const to = setTimeout(() => fin(null), Math.max(1000, o.maxT * 1000 - (performance.now() - t0)));
+      const stopper = setInterval(() => { if (!running) fin(null); }, 50);
+      light();
+    });
+    $('#progress').textContent = 'Biegnij do dowolnego niebieskiego pachołka!';
+    const r1 = await waitTap(cones, () => cones.forEach(p => setColor(p, BLUE, true)));
+    let r2 = null;
+    if (r1) {
+      st.split = Math.round(r1.t - t0); SND.hit();
+      $('#progress').textContent = `Pachołek ${r1.pod.num}: ${(st.split / 1000).toFixed(2)} s. Wracaj do zielonego!`;
+      cones.forEach(p => setColor(p, OFF));
+      r2 = await waitTap([startPod], () => setColor(startPod, GREEN, true));
+    }
+    clearInterval(tick);
+    await allOff();
+    if (r2) {
+      const total = Math.round(r2.t - t0);
+      st.hits = 1; st.times.push(total); SND.hit();
+      $('#last').textContent = (total / 1000).toFixed(3) + ' s';
+      $('#best').textContent = (total / 1000).toFixed(3) + ' s'; $('#hits').textContent = 1;
+      log('info', `Biegnij z powrotem: całość ${total} ms, do pachołka ${st.split} ms`);
     } else if (running) { st.miss = 1; SND.miss(); $('#last').textContent = 'koniec czasu'; }
   },
   async reaction(st, o) {
@@ -944,13 +993,13 @@ $('#start').onclick = async () => {
     if (m === 'duel') { await runDuel(o); }
     else {
       const st = newStats(); showSolo(st, '— ms');
-      if (m !== 'stopwatch') await countdown($('#last'));
+      if (m !== 'stopwatch' && m !== 'shuttle') await countdown($('#last'));
       if (running) await MODES[m](st, o);
       const pid = $('#player').value;
-      const summary = m === 'stopwatch' ? `Start 3-2-1: ${st.times.length ? (st.times[0] / 1000).toFixed(3) + ' s' : 'bez pomiaru'}` : `${MODE_NAMES[m]}: ${st.hits} trafień, ${st.miss} pudeł${st.errs || m === 'traps' ? `, ${st.errs} pułapek, punkty ${st.hits - st.errs}` : ''}, średnia ${avgOf(st.times) ?? '—'} ms`;
+      const summary = m === 'stopwatch' || m === 'shuttle' ? `${MODE_NAMES[m]}: ${st.times.length ? (st.times[0] / 1000).toFixed(3) + ' s' : 'bez pomiaru'}${st.split ? ` (do pachołka ${(st.split / 1000).toFixed(3)} s)` : ''}` : `${MODE_NAMES[m]}: ${st.hits} trafień, ${st.miss} pudeł${st.errs || m === 'traps' ? `, ${st.errs} pułapek, punkty ${st.hits - st.errs}` : ''}, średnia ${avgOf(st.times) ?? '—'} ms`;
       $('#progress').textContent = (running ? 'Koniec. ' : 'Przerwano. ') + summary + (pid ? ` · zapisano dla: ${playerName(pid)}` : ' · gość, bez zapisu');
       if (pid && st.hits + st.miss > 0) {
-        pushResults([{ pid, ts: Date.now(), mode: m, dur: o.dur, hits: st.hits, miss: st.miss, errs: st.errs, avg: avgOf(st.times), best: st.times.length ? Math.min(...st.times) : null }]);
+        pushResults([{ pid, ts: Date.now(), mode: m, dur: o.dur, hits: st.hits, miss: st.miss, errs: st.errs, avg: avgOf(st.times), best: st.times.length ? Math.min(...st.times) : null, ...(st.split ? { split: st.split } : {}) }]);
       }
       log('info', summary);
     }
