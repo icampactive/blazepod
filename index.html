@@ -26,6 +26,8 @@ h1 span { color: var(--sun); }
 .brand .muted { color: #eaf6dc; }
 .brand label { color: #fff; }
 .brand .pill { background: #fff; }
+.logo { width: 96px; height: auto; background: #fff; border: 3px solid var(--fg); border-radius: 50%; padding: 6px 4px; flex: none; }
+@media (max-width: 480px) { .logo { width: 68px; } h1 { font-size: 26px; } }
 .tag { font: 700 13px/1 var(--display); background: #fff; color: var(--accent-dk); border: 2px solid var(--fg); border-radius: 99px; padding: 4px 10px; letter-spacing: .04em; }
 h2 { font: 700 15px/1.2 var(--display); text-transform: uppercase; letter-spacing: .06em; color: var(--accent-dk); margin: 0; }
 p { margin: 0; }
@@ -82,10 +84,12 @@ code { font-family: var(--mono); font-size: 12.5px; }
 <body>
 <div class="wrap">
   <header class="row between brand">
-    <div style="display:grid;gap:6px">
-      <span class="tag" style="justify-self:start">iCAMP.pl ACTIVE</span>
+    <div class="row" style="gap:14px;flex-wrap:nowrap;min-width:0">
+    <img class="logo" alt="iCAMP.pl Active" src="data:image/jpeg;base64,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">
+    <div style="display:grid;gap:6px;min-width:0">
       <h1>BlazePod <span>Trener</span></h1>
       <p class="muted">Trening reakcji na padach BlazePod</p>
+    </div>
     </div>
     <div class="row">
       <label class="row" for="sound" style="gap:6px"><input type="checkbox" id="sound" checked> Dźwięki</label>
@@ -111,8 +115,9 @@ code { font-family: var(--mono); font-size: 12.5px; }
       <button id="lamp">Świeć na stałe</button>
       <button id="disco">Disco</button>
       <button id="police">Policja</button>
+      <button id="drums">Perkusja</button>
     </div>
-    <p class="muted">Moc świecenia działa też w treningu i efektach. „Świeć na stałe” zapala pady wybranym kolorem, „Disco” miga losowymi kolorami, „Policja” daje niebieskie podwójne błyski. Działają, aż je wyłączysz.</p>
+    <p class="muted">Moc świecenia działa też w treningu i efektach. „Świeć na stałe” zapala pady wybranym kolorem, „Disco” miga losowymi kolorami, „Policja” daje niebieskie podwójne błyski, „Perkusja” zamienia każdy pad w inny instrument. Działają, aż je wyłączysz.</p>
   </section>
 
   <!-- ZAWODNIK + TRENING -->
@@ -165,6 +170,8 @@ code { font-family: var(--mono); font-size: 12.5px; }
         <div class="field" data-for="reaction traps"><label for="pmin">Przerwa od (s)</label><input id="pmin" type="number" min="0" max="10" step="0.1" value="0.6"></div>
         <div class="field" data-for="reaction traps"><label for="pmax">do (s)</label><input id="pmax" type="number" min="0" max="10" step="0.1" value="2"></div>
         <div class="field" data-for="stopwatch"><label for="maxT">Maks. czas (s)</label><input id="maxT" type="number" min="5" max="600" value="60"></div>
+        <div class="field" data-for="stopwatch"><label for="startPad">Pad startowy (nr)</label><input id="startPad" type="number" min="1" max="20" value="1"></div>
+        <label class="row" data-for="timed" for="withTraps" style="gap:6px;align-self:end"><input type="checkbox" id="withTraps"> Z pułapkami (−1 pkt)</label>
       </div>
       <div class="row hide" id="duelPlayers" style="gap:12px">
         <div class="field"><label for="pA" style="color:var(--pa)">Gracz niebieski (pady 1, 3, 5…)</label><select id="pA"></select></div>
@@ -191,7 +198,8 @@ code { font-family: var(--mono); font-size: 12.5px; }
         <div class="stat"><span class="muted">Najlepszy</span><b id="best">—</b></div>
         <div class="stat"><span class="muted">Trafienia</span><b id="hits">0</b></div>
         <div class="stat"><span class="muted">Pudła</span><b id="miss">0</b></div>
-        <div class="stat" data-for="traps"><span class="muted">Błędy (czerwony)</span><b id="errs">0</b></div>
+        <div class="stat" data-for="traps timed"><span class="muted">Złapane pułapki</span><b id="errs">0</b></div>
+        <div class="stat" data-for="traps timed"><span class="muted">Punkty</span><b id="score">0</b></div>
       </div>
     </div>
     <div id="duelView" class="hide" style="display:grid;gap:12px">
@@ -234,14 +242,15 @@ const COYOTTA = 0x09D7;
 const COLORS = { zielony:[0,255,0], czerwony:[255,0,0], niebieski:[0,0,255], żółty:[255,200,0], fioletowy:[180,0,255], turkusowy:[0,220,200], pomarańczowy:[255,90,0], biały:[255,255,255] };
 const OFF = [0,0,0], GREEN = COLORS.zielony, RED = COLORS.czerwony, BLUE = COLORS.niebieski, ORANGE = COLORS.pomarańczowy;
 const RANDOM_COLORS = ['zielony','niebieski','żółty','fioletowy','turkusowy','biały'].map(k => COLORS[k]);
+const TRAP_COLORS = ['czerwony','niebieski','żółty','fioletowy','turkusowy','pomarańczowy','biały'].map(k => COLORS[k]);
 const MODE_NAMES = { reaction:'Reakcja', sequence:'Sekwencja', timed:'Na czas', traps:'Pułapki', duel:'Pojedynek', stopwatch:'Start 3-2-1' };
 const MODE_HELP = {
   reaction: 'Losowy pad zapala się losowym kolorem po losowej przerwie. Uderz jak najszybciej. Czas mierzy sam pad.',
   sequence: 'Pady zapalają się po kolei według numerów. Przydaje się do ćwiczeń biegowych i zmiany kierunku.',
   timed: 'Bez przerw: trafiasz, od razu zapala się następny pad. Liczy się, ile zdążysz w zadanym czasie.',
-  traps: 'Zielony bij, czerwonego nie dotykaj. Czerwony zgaśnie sam. Wynik = trafienia − błędy.',
+  traps: 'Jeden pad świeci na zielono, pozostałe w innych kolorach to pułapki. Bij tylko zielony! Trafienie zielonego +1, dotknięcie pułapki −1 (wynik może być ujemny). Z jednym padem pułapki pojawiają się na zmianę z zielonym.',
   duel: 'Pady dzielą się na dwie drużyny: nieparzyste niebieskie, parzyste pomarańczowe. Każdy bije tylko swoje. Wygrywa więcej trafień. Potrzeba co najmniej 2 padów.',
-  stopwatch: 'Pady odliczają 3-2-1 na czerwono, potem wszystkie zapalają się na zielono i rusza stoper. Dotknięcie dowolnego pada zatrzymuje czas. Np. sprint do pada albo tor przeszkód.'
+  stopwatch: 'Pad startowy odlicza 3-2-1 na czerwono, pozostałe pady świecą na niebiesko jak pachołki. Na zielonym rusza stoper. Dotknięcie dowolnego pachołka zatrzymuje czas (z jednym padem: dotknięcie tego pada).'
 };
 
 const $ = s => document.querySelector(s);
@@ -400,6 +409,7 @@ const allOff = () => Promise.all(readyPods().map(p => setColor(p, OFF)));
 function onTap(pod, v) {
   const b = new Uint8Array(v.buffer, v.byteOffset, v.byteLength);
   const state = b[0]; const ms = b.length >= 5 ? v.getUint32(1, true) : 0;
+  if (fxMode === 'drums') { drumHit(pod); return; }
   log('rx', `[${pod.name}] uderzenie 0x${state.toString(16).padStart(2,'0')}${state ? `, ${ms} ms` : ' (pad zgaszony)'}`);
   if (state === 0x25) { const n = pod.card.querySelector('.num'); n.style.background = ''; n.style.color = ''; }
   if (state !== 0x00 && pod.waiter) pod.waiter(ms);
@@ -461,6 +471,7 @@ let fxMode = null, fxToken = 0;
 function updateFx() {
   $('#disco').classList.toggle('on', fxMode === 'disco'); $('#disco').textContent = fxMode === 'disco' ? 'Stop disco' : 'Disco';
   $('#police').classList.toggle('on', fxMode === 'police'); $('#police').textContent = fxMode === 'police' ? 'Stop policja' : 'Policja';
+  $('#drums').classList.toggle('on', fxMode === 'drums'); $('#drums').textContent = fxMode === 'drums' ? 'Stop perkusja' : 'Perkusja';
 }
 function stopFx(off = true) { const was = fxMode; fxToken++; fxMode = null; updateFx(); if (was && off) setTimeout(allOff, 60); }
 async function startFx(mode) {
@@ -470,6 +481,16 @@ async function startFx(mode) {
   fxMode = mode; const tok = ++fxToken; updateFx(); log('info', `Efekt: ${mode}`);
   const alive = () => fxToken === tok && !running;
   const all = (list, c) => Promise.all(list.map(p => setColor(p, typeof c === 'function' ? c(p) : c)));
+  if (mode === 'drums') {
+    audio();
+    status('Perkusja: ' + readyPods().map(p => `Pad ${p.num} – ${drumOf(p).name}`).join(', ') + '. Uderzaj w pady!');
+    const seen = new Set();
+    while (alive()) {
+      for (const p of readyPods()) if (!seen.has(p)) { seen.add(p); setColor(p, dimOf(drumOf(p).rgb)); }
+      await sleep(400);
+    }
+    return;
+  }
   if (mode === 'disco') {
     while (alive()) {
       const list = readyPods(); if (!list.length) { await sleep(500); continue; }
@@ -492,6 +513,28 @@ async function startFx(mode) {
 }
 $('#disco').onclick = () => startFx('disco');
 $('#police').onclick = () => startFx('police');
+$('#drums').onclick = () => startFx('drums');
+
+// ——— Perkusja: każdy pad to inny instrument ———
+function noiseBuf(a) { if (a._nb) return a._nb; const b = a.createBuffer(1, a.sampleRate * 0.5, a.sampleRate); const d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; return (a._nb = b); }
+function envOut(a, node, t, v, dur) { const g = a.createGain(); g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur); node.connect(g).connect(a.destination); }
+function osc(a, type, f0, f1, t, v, dur) { const o = a.createOscillator(); o.type = type; o.frequency.setValueAtTime(f0, t); if (f1) o.frequency.exponentialRampToValueAtTime(f1, t + dur * 0.8); envOut(a, o, t, v, dur); o.start(t); o.stop(t + dur + 0.02); }
+function noise(a, ftype, freq, t, v, dur) { const n = a.createBufferSource(); n.buffer = noiseBuf(a); const f = a.createBiquadFilter(); f.type = ftype; f.frequency.value = freq; n.connect(f); envOut(a, f, t, v, dur); n.start(t); n.stop(t + dur + 0.02); }
+const DRUMS = [
+  { name: 'bęben basowy', rgb: [255, 0, 0],     play: a => { const t = a.currentTime; osc(a, 'sine', 150, 45, t, 1, 0.35); } },
+  { name: 'werbel',       rgb: [255, 200, 0],   play: a => { const t = a.currentTime; noise(a, 'highpass', 1200, t, 0.6, 0.18); osc(a, 'triangle', 220, 160, t, 0.4, 0.1); } },
+  { name: 'hi-hat',       rgb: [0, 220, 200],   play: a => { const t = a.currentTime; noise(a, 'highpass', 7000, t, 0.35, 0.06); } },
+  { name: 'tom',          rgb: [180, 0, 255],   play: a => { const t = a.currentTime; osc(a, 'sine', 220, 110, t, 0.8, 0.3); } },
+  { name: 'klaśnięcie',   rgb: [255, 90, 0],    play: a => { const t = a.currentTime; [0, 0.012, 0.024].forEach(d => noise(a, 'bandpass', 1500, t + d, 0.6, d === 0.024 ? 0.15 : 0.01)); } },
+  { name: 'krowi dzwonek', rgb: [255, 255, 255], play: a => { const t = a.currentTime; osc(a, 'square', 800, 0, t, 0.15, 0.25); osc(a, 'square', 540, 0, t, 0.15, 0.25); } }
+];
+const drumOf = p => DRUMS[(p.num - 1) % DRUMS.length];
+const dimOf = rgb => rgb.map(v => Math.round(v * 0.25));
+function drumHit(pod) {
+  const d = drumOf(pod); const a = audio(); if (a) d.play(a);
+  setColor(pod, d.rgb);
+  clearTimeout(pod.drumT); pod.drumT = setTimeout(() => { if (fxMode === 'drums') setColor(pod, dimOf(d.rgb)); }, 120);
+}
 
 // ——— Konto Google + zapis online (Firebase) ———
 const FB_CONFIG = { apiKey: "AIzaSyDRfKm3OGUZgDugoWsE6BsPdqM_svP_eng", authDomain: "blazepod-trener.firebaseapp.com", projectId: "blazepod-trener", storageBucket: "blazepod-trener.firebasestorage.app", messagingSenderId: "714200341533", appId: "1:714200341533:web:e1c964825b62097867faf4" };
@@ -620,7 +663,7 @@ function renderHistory() {
   $('#hist').innerHTML = mine.slice(-30).reverse().map(h => {
     const d = new Date(h.ts);
     const extra = h.mode === 'duel' ? ` (${h.won ? 'wygrana' : h.won === false ? 'przegrana' : 'remis'} ${h.hits}:${h.opp})` : '';
-    return `<tr><td>${d.toLocaleDateString('pl-PL')} ${d.toTimeString().slice(0,5)}</td><td>${MODE_NAMES[h.mode] || h.mode}${extra}</td><td class="n">${h.hits}</td><td class="n">${h.miss}</td><td class="n">${h.mode === 'traps' ? h.errs : '—'}</td><td class="n">${fmtH(h, h.avg)}</td><td class="n">${fmtH(h, h.best)}</td></tr>`;
+    return `<tr><td>${d.toLocaleDateString('pl-PL')} ${d.toTimeString().slice(0,5)}</td><td>${MODE_NAMES[h.mode] || h.mode}${extra}</td><td class="n">${h.hits}</td><td class="n">${h.miss}</td><td class="n">${h.mode === 'traps' || h.errs ? h.errs : '—'}</td><td class="n">${fmtH(h, h.avg)}</td><td class="n">${fmtH(h, h.best)}</td></tr>`;
   }).join('') || '<tr><td colspan="7" class="muted">Brak treningów. Wybierz tryb i kliknij Start.</td></tr>';
   const withAvg = mine.filter(h => h.avg != null && h.mode !== 'stopwatch');
   const sw = mine.filter(h => h.mode === 'stopwatch' && h.best != null);
@@ -682,7 +725,7 @@ function newStats() { return { times: [], hits: 0, miss: 0, errs: 0 }; }
 const avgOf = t => t.length ? Math.round(t.reduce((a, b) => a + b, 0) / t.length) : null;
 function showSolo(st, last) {
   if (last !== undefined) $('#last').textContent = last;
-  $('#hits').textContent = st.hits; $('#miss').textContent = st.miss; $('#errs').textContent = st.errs;
+  $('#hits').textContent = st.hits; $('#miss').textContent = st.miss; $('#errs').textContent = st.errs; $('#score').textContent = st.hits - st.errs;
   $('#avg').textContent = st.times.length ? avgOf(st.times) + ' ms' : '—';
   $('#best').textContent = st.times.length ? Math.min(...st.times) + ' ms' : '—';
 }
@@ -715,19 +758,54 @@ async function finale(colorFor = () => GREEN) {
   for (let i = 0; i < 3; i++) { await flashAll(colorFor, 250); await sleep(200); }
 }
 
+// Runda z pułapkami: zielony cel + pułapki w innych kolorach. Trafienie celu +1, dotknięcie pułapki −1.
+function trapRound(st, target, traps, limit) {
+  return new Promise(resolve => {
+    let done = false; const t0 = performance.now();
+    const all = [target, ...traps];
+    const fin = r => { if (done) return; done = true; all.forEach(p => p.waiter = null); clearTimeout(timer); clearInterval(stopper); Promise.all(all.map(p => setColor(p, OFF))).then(() => resolve(r)); };
+    target.waiter = ms => fin(ms == null ? { hit: false, lost: true } : { hit: true, ms: ms || Math.round(performance.now() - t0) });
+    traps.forEach(p => p.waiter = ms => { p.waiter = null; if (ms == null) return; st.errs++; SND.error(); showSolo(st, 'pułapka! −1'); });
+    const timer = setTimeout(() => fin({ hit: false }), limit);
+    const stopper = setInterval(() => { if (!running) fin({ hit: false, stopped: true }); }, 50);
+    setColor(target, GREEN, true);
+    traps.forEach(p => setColor(p, rnd(TRAP_COLORS), true));
+  });
+}
+
 const MODES = {
   async stopwatch(st, o) {
     const list = readyPods(); if (!list.length || !running) return;
+    const startPod = list.find(p => p.num === o.startPad) || list[0];
+    const cones = list.filter(p => p !== startPod);
+    await allOff();
+    await Promise.all(cones.map(p => setColor(p, BLUE)));   // pachołki
+    $('#progress').textContent = cones.length ? `Pad startowy: ${startPod.num}. Pachołki: ${cones.map(p => p.num).join(', ')}.` : 'Jeden pad: start i meta.';
+    for (const n of [3, 2, 1]) {
+      if (!running) return;
+      $('#last').textContent = n; SND.tick();
+      const t = performance.now(); await setColor(startPod, RED); await sleep(300); await setColor(startPod, OFF);
+      await wait(Math.max(0, 1000 - (performance.now() - t)));
+    }
+    if (!running) return;
+    $('#last').textContent = 'START'; SND.go();
+    const targets = cones.length ? cones : [startPod];
     const t0 = performance.now();
-    $('#progress').textContent = 'Czas leci! Dotknij dowolnego pada.';
+    $('#progress').textContent = cones.length ? 'Czas leci! Dotknij dowolnego niebieskiego pachołka.' : 'Czas leci! Dotknij pada.';
     const tick = setInterval(() => { $('#last').textContent = ((performance.now() - t0) / 1000).toFixed(2) + ' s'; }, 50);
     const res = await new Promise(resolve => {
       let done = false;
-      const fin = r => { if (done) return; done = true; list.forEach(p => p.waiter = null); clearTimeout(to); clearInterval(stopper); resolve(r); };
-      list.forEach(p => p.waiter = ms => fin(ms == null ? null : { pod: p, ms: ms || Math.round(performance.now() - t0) }));
+      const fin = r => { if (done) return; done = true; targets.forEach(p => p.waiter = null); clearTimeout(to); clearInterval(stopper); resolve(r); };
+      targets.forEach(p => p.waiter = ms => {
+        if (ms == null) return fin(null);
+        const local = Math.round(performance.now() - t0);
+        fin({ pod: p, ms: ms && ms <= local ? ms : local });
+      });
       const to = setTimeout(() => fin(null), o.maxT * 1000);
       const stopper = setInterval(() => { if (!running) fin(null); }, 50);
-      list.forEach(p => setColor(p, GREEN, true));
+      // ponowne zapalenie zeruje licznik czasu w padzie
+      if (cones.length) { setColor(startPod, GREEN); cones.forEach(p => setColor(p, BLUE, true)); }
+      else setColor(startPod, GREEN, true);
     });
     clearInterval(tick);
     await allOff();
@@ -735,7 +813,7 @@ const MODES = {
       st.hits = 1; st.times.push(res.ms); SND.hit();
       $('#last').textContent = (res.ms / 1000).toFixed(3) + ' s';
       $('#best').textContent = (res.ms / 1000).toFixed(3) + ' s'; $('#hits').textContent = 1;
-      log('info', `Start 3-2-1: ${res.ms} ms (pad ${res.pod.num})`);
+      log('info', `Start 3-2-1: ${res.ms} ms (pachołek ${res.pod.num})`);
     } else if (running) { st.miss = 1; SND.miss(); $('#last').textContent = 'koniec czasu'; }
   },
   async reaction(st, o) {
@@ -766,8 +844,9 @@ const MODES = {
       $('#progress').textContent = `Zostało ${Math.ceil(left / 1000)} s`;
       const list = readyPods(); if (!list.length) break;
       const pod = pickPod(list, prev); prev = pod;
-      const r = await lightAndWait(pod, rnd(RANDOM_COLORS), Math.min(o.limit, left));
-      if (!r.hit && performance.now() >= end) break;
+      const traps = o.withTraps ? list.filter(p => p !== pod && Math.random() < 0.5) : [];
+      const r = o.withTraps ? await trapRound(st, pod, traps, Math.min(o.limit, left)) : await lightAndWait(pod, rnd(RANDOM_COLORS), Math.min(o.limit, left));
+      if (r.stopped || (!r.hit && performance.now() >= end)) break;
       record(st, r); await wait(120);
     }
   },
@@ -777,13 +856,19 @@ const MODES = {
       const list = readyPods(); if (!list.length) break;
       $('#progress').textContent = `Powtórzenie ${i + 1} z ${o.rounds}`;
       await wait((o.pmin + Math.random() * Math.max(0, o.pmax - o.pmin)) * 1000); if (!running) break;
-      const pod = pickPod(list, prev); prev = pod;
-      if (Math.random() < 0.65) record(st, await lightAndWait(pod, GREEN, o.limit));
-      else {
-        const r = await lightAndWait(pod, RED, Math.max(800, o.limit * 0.6));
-        if (r.stopped) break;
-        if (r.hit) { st.errs++; SND.error(); showSolo(st, 'czerwony!'); }
-        else showSolo(st, 'ominięty ✓');
+      if (list.length > 1) {
+        const target = pickPod(list, prev); prev = target;
+        const r = await trapRound(st, target, list.filter(p => p !== target), o.limit);
+        if (r.stopped) break; record(st, r);
+      } else {
+        const pod = list[0];
+        if (Math.random() < 0.6) { const r = await trapRound(st, pod, [], o.limit); if (r.stopped) break; record(st, r); }
+        else {
+          const r = await lightAndWait(pod, rnd(TRAP_COLORS), Math.max(800, o.limit * 0.6));
+          if (r.stopped) break;
+          if (r.hit) { st.errs++; SND.error(); showSolo(st, 'pułapka! −1'); }
+          else showSolo(st, 'ominięta ✓');
+        }
       }
     }
   }
@@ -833,23 +918,23 @@ $('#start').onclick = async () => {
   audio();
   if (lampOn) setLamp(false);
   stopFx(false);
-  running = true; $('#start').disabled = true; $('#stop').disabled = false; $('#mode').disabled = true; $('#lamp').disabled = $('#disco').disabled = $('#police').disabled = true;
+  running = true; $('#start').disabled = true; $('#stop').disabled = false; $('#mode').disabled = true; $('#lamp').disabled = $('#disco').disabled = $('#police').disabled = $('#drums').disabled = true;
   const m = $('#mode').value;
   const o = {
     rounds: Math.max(1, +$('#rounds').value || 20), dur: Math.max(5, +$('#dur').value || 30),
     limit: Math.max(500, (+$('#tmo').value || 3) * 1000),
     pmin: Math.max(0, +$('#pmin').value || 0), pmax: Math.max(0, +$('#pmax').value || 0),
-    maxT: Math.max(5, +$('#maxT').value || 60)
+    maxT: Math.max(5, +$('#maxT').value || 60), startPad: +$('#startPad').value || 1, withTraps: $('#withTraps').checked
   };
   await allOff();
   try {
     if (m === 'duel') { await runDuel(o); }
     else {
       const st = newStats(); showSolo(st, '— ms');
-      if (m === 'stopwatch') await countdown($('#last'), () => RED, true); else await countdown($('#last'));
+      if (m !== 'stopwatch') await countdown($('#last'));
       if (running) await MODES[m](st, o);
       const pid = $('#player').value;
-      const summary = m === 'stopwatch' ? `Start 3-2-1: ${st.times.length ? (st.times[0] / 1000).toFixed(3) + ' s' : 'bez pomiaru'}` : `${MODE_NAMES[m]}: ${st.hits} trafień, ${st.miss} pudeł${m === 'traps' ? `, ${st.errs} błędów` : ''}, średnia ${avgOf(st.times) ?? '—'} ms`;
+      const summary = m === 'stopwatch' ? `Start 3-2-1: ${st.times.length ? (st.times[0] / 1000).toFixed(3) + ' s' : 'bez pomiaru'}` : `${MODE_NAMES[m]}: ${st.hits} trafień, ${st.miss} pudeł${st.errs || m === 'traps' ? `, ${st.errs} pułapek, punkty ${st.hits - st.errs}` : ''}, średnia ${avgOf(st.times) ?? '—'} ms`;
       $('#progress').textContent = (running ? 'Koniec. ' : 'Przerwano. ') + summary + (pid ? ` · zapisano dla: ${playerName(pid)}` : ' · gość, bez zapisu');
       if (pid && st.hits + st.miss > 0) {
         pushResults([{ pid, ts: Date.now(), mode: m, dur: o.dur, hits: st.hits, miss: st.miss, errs: st.errs, avg: avgOf(st.times), best: st.times.length ? Math.min(...st.times) : null }]);
@@ -859,7 +944,7 @@ $('#start').onclick = async () => {
     if (running && m !== 'duel') await finale();
   } catch (e) { log('err', 'Trening: ' + e.message); }
   if (!running) await allOff();
-  running = false; $('#stop').disabled = true; $('#mode').disabled = false; $('#lamp').disabled = $('#disco').disabled = $('#police').disabled = false;
+  running = false; $('#stop').disabled = true; $('#mode').disabled = false; $('#lamp').disabled = $('#disco').disabled = $('#police').disabled = $('#drums').disabled = false;
   renderHistory(); refreshStart(true);
 };
 $('#stop').onclick = () => { running = false; };
